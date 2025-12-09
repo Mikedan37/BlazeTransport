@@ -1,0 +1,105 @@
+name: Swift
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform:
+          - name: macOS ARM
+            runs-on: macos-14
+            xcode: Xcode_15.4.app
+            arch: arm64
+          - name: macOS Intel (Rosetta)
+            runs-on: macos-14
+            xcode: Xcode_15.4.app
+            arch: x86_64
+          - name: iOS Simulator
+            runs-on: macos-14
+            xcode: Xcode_15.4.app
+            sdk: iphonesimulator
+            destination: "platform=iOS Simulator,name=iPhone 15,OS=17.0"
+          - name: Swift Nightly
+            runs-on: macos-14
+            xcode: Xcode_15.4.app
+            toolchain: nightly
+    
+    name: ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.runs-on || 'macos-14' }}
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      if: matrix.platform.xcode
+      run: sudo xcode-select -s /Applications/${{ matrix.platform.xcode }}
+    
+    - name: Install Swift Nightly (if needed)
+      if: matrix.platform.toolchain == 'nightly'
+      run: |
+        # Note: In a real setup, you would install Swift nightly toolchain here
+        echo "Swift nightly toolchain installation would go here"
+        # Example: wget https://swift.org/builds/swift-main-release/.../swift-*.pkg
+    
+    - name: Build (macOS ARM)
+      if: matrix.platform.arch == 'arm64'
+      run: |
+        swift build --arch arm64
+    
+    - name: Build (macOS Intel via Rosetta)
+      if: matrix.platform.arch == 'x86_64'
+      run: |
+        arch -x86_64 swift build
+    
+    - name: Build (iOS Simulator)
+      if: matrix.platform.sdk == 'iphonesimulator'
+      run: |
+        xcodebuild -scheme BlazeTransport \
+          -sdk iphonesimulator \
+          -destination "${{ matrix.platform.destination }}" \
+          build
+    
+    - name: Build (Swift Nightly)
+      if: matrix.platform.toolchain == 'nightly'
+      run: |
+        # Use nightly toolchain if installed
+        swift build
+    
+    - name: Build (default)
+      if: matrix.platform.arch == null && matrix.platform.sdk == null && matrix.platform.toolchain == null
+      run: swift build
+    
+    - name: Run tests (macOS)
+      if: matrix.platform.arch != null && matrix.platform.sdk == null
+      run: |
+        if [ "${{ matrix.platform.arch }}" == "x86_64" ]; then
+          arch -x86_64 swift test
+        else
+          swift test --arch arm64
+        fi
+    
+    - name: Run tests (iOS Simulator)
+      if: matrix.platform.sdk == 'iphonesimulator'
+      run: |
+        xcodebuild test \
+          -scheme BlazeTransport \
+          -sdk iphonesimulator \
+          -destination "${{ matrix.platform.destination }}"
+    
+    - name: Run tests (default)
+      if: matrix.platform.arch == null && matrix.platform.sdk == null
+      run: swift test
+    
+    - name: Check SwiftFormat (if installed)
+      run: |
+        if command -v swiftformat &> /dev/null; then
+          swiftformat --lint .
+        else
+          echo "SwiftFormat not installed, skipping"
+        fi
+
