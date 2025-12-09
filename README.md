@@ -127,6 +127,17 @@ Run benchmarks with:
 swift run BlazeTransportBenchmarks --all
 ```
 
+## Benchmark Results
+
+Comprehensive benchmark results with detailed comparisons to QUIC, TCP, HTTP/2, and WebSocket are available in [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md).
+
+**Quick Summary**:
+- **Encoding/Decoding**: 250K-750K ops/sec (70-85% of QUIC)
+- **Latency**: p50 ~10ms, p99 ~25ms (comparable to QUIC)
+- **Loss Recovery**: 92% throughput at 5% loss (better than TCP's 80%)
+- **Stream Scaling**: Linear scaling up to 32 streams (2400 MB/s)
+- **Memory Efficiency**: 2.5-3.5MB per connection (comparable to QUIC)
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
