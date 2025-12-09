@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.4.app
+      
+    - name: Swift version
+      run: swift --version
+      
+    - name: Build package
+      run: swift build
+      
+    - name: Run tests
+      run: swift test
+      
+    - name: Build with thread sanitizer
+      run: swift build --sanitize=thread
+      
+    - name: Check for SwiftFormat (optional)
+      continue-on-error: true
+      run: |
+        if command -v swiftformat &> /dev/null; then
+          swiftformat --lint .
+        else
+          echo "SwiftFormat not installed, skipping"
+        fi
+        
+    - name: Check for SwiftLint (optional)
+      continue-on-error: true
+      run: |
+        if command -v swiftlint &> /dev/null; then
+          swiftlint lint
+        else
+          echo "SwiftLint not installed, skipping"
+        fi
+

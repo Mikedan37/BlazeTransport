@@ -1,5 +1,8 @@
 // swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
+//
+// BlazeTransport - A QUIC-lite Swift-native transport protocol
+// Version: 0.1.0
 
 import PackageDescription
 
@@ -10,10 +13,20 @@ let package = Package(
         .iOS(.v17),
     ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
+        /// Main BlazeTransport library providing transport protocol functionality.
         .library(
             name: "BlazeTransport",
             targets: ["BlazeTransport"]
+        ),
+        /// Benchmark executable for performance testing.
+        .executable(
+            name: "BlazeTransportBenchmarks",
+            targets: ["BlazeTransportBenchmarks"]
+        ),
+        /// Fuzzing executable for security testing.
+        .executable(
+            name: "BlazeTransportFuzzing",
+            targets: ["BlazeTransportFuzzing"]
         ),
     ],
     dependencies: [
