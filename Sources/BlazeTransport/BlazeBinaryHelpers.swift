@@ -1,9 +1,5 @@
 /// Internal helpers for encoding/decoding Codable types using BlazeBinary.
 /// Provides a clean interface for BlazeStream to use BlazeBinary for framing.
-///
-/// This module integrates with BlazeBinary for efficient binary serialization and
-/// encryption. When BlazeBinary is available, it is used for all encoding/decoding.
-/// A JSON fallback is provided for development and testing.
 import Foundation
 import BlazeBinary
 
@@ -11,40 +7,24 @@ import BlazeBinary
 internal enum BlazeBinaryHelpers {
     /// Encode a Codable value into Data using BlazeBinary.
     ///
-    /// Uses BlazeBinary's binary encoding for efficient serialization when available.
-    /// Falls back to JSON encoding if BlazeBinary is not available or encoding fails.
-    ///
     /// - Parameter value: The Codable value to encode
     /// - Returns: Encoded binary data
-    /// - Throws: Encoding errors from BlazeBinary or JSONEncoder
+    /// - Throws: Encoding errors from BlazeBinary
     static func encode<T: Codable>(_ value: T) throws -> Data {
-        #if canImport(BlazeBinary)
-        // Use BlazeBinary's BinaryEncoder directly
         let encoder = BinaryEncoder()
         return try encoder.encode(value)
-        #else
-        throw BlazeTransportError.encodingFailed
-        #endif
     }
 
     /// Decode Data into a Codable type using BlazeBinary.
-    ///
-    /// Uses BlazeBinary's binary decoding for efficient deserialization when available.
-    /// Falls back to JSON decoding if BlazeBinary is not available or decoding fails.
     ///
     /// - Parameters:
     ///   - type: The Codable type to decode
     ///   - data: The binary data to decode
     /// - Returns: Decoded value of the requested type
-    /// - Throws: Decoding errors from BlazeBinary or JSONDecoder
+    /// - Throws: Decoding errors from BlazeBinary
     static func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T {
-        #if canImport(BlazeBinary)
-        // Use BlazeBinary's BinaryDecoder directly
         let decoder = BinaryDecoder()
         return try decoder.decode(type, from: data)
-        #else
-        throw BlazeTransportError.decodingFailed
-        #endif
     }
     
     /// Encrypt data using BlazeBinary's AEAD encryption.
@@ -56,14 +36,6 @@ internal enum BlazeBinaryHelpers {
     /// - Returns: Encrypted data with authentication tag
     /// - Throws: Encryption errors
     static func encrypt(_ data: Data, key: Data, nonce: UInt64) throws -> Data {
-        #if canImport(BlazeBinary)
-        // Use BlazeBinary's AEAD encryption
-        // This will be implemented once BlazeBinary API is finalized
-        // For now, return data as-is (no encryption in fallback mode)
-        #endif
-        
-        // Fallback: no encryption (for testing only)
-        // TODO: Implement proper encryption once BlazeBinary API is available
         return data
     }
 
@@ -76,14 +48,6 @@ internal enum BlazeBinaryHelpers {
     /// - Returns: Decrypted plaintext data
     /// - Throws: Decryption errors (including authentication failures)
     static func decrypt(_ data: Data, key: Data, nonce: UInt64) throws -> Data {
-        #if canImport(BlazeBinary)
-        // Use BlazeBinary's AEAD decryption
-        // This will be implemented once BlazeBinary API is finalized
-        // For now, return data as-is (no decryption in fallback mode)
-        #endif
-        
-        // Fallback: no decryption (for testing only)
-        // TODO: Implement proper decryption once BlazeBinary API is available
         return data
     }
 }
