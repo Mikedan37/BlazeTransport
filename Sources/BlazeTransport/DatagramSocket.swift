@@ -224,7 +224,7 @@ final class UDPSocket: DatagramSocket {
         Darwin.shutdown(socketFD, SHUT_WR)
         Darwin.close(socketFD)
         #elseif canImport(Glibc)
-        Glibc.shutdown(socketFD, SHUT_WR)
+        Glibc.shutdown(socketFD, Int32(SHUT_WR))
         Glibc.close(socketFD)
         #endif
         socketFD = -1
