@@ -5,9 +5,7 @@
 /// encryption. When BlazeBinary is available, it is used for all encoding/decoding.
 /// A JSON fallback is provided for development and testing.
 import Foundation
-#if canImport(BlazeBinary)
 import BlazeBinary
-#endif
 
 /// Helper functions for BlazeBinary encoding/decoding.
 internal enum BlazeBinaryHelpers {
@@ -21,20 +19,12 @@ internal enum BlazeBinaryHelpers {
     /// - Throws: Encoding errors from BlazeBinary or JSONEncoder
     static func encode<T: Codable>(_ value: T) throws -> Data {
         #if canImport(BlazeBinary)
-        do {
-            // Use BlazeBinary's BinaryEncoder directly
-            let encoder = BinaryEncoder()
-            return try encoder.encode(value)
-        } catch {
-            // BlazeBinary encoding failed, fall through to JSON
-        }
-        #endif
-        
-        // Fallback to JSON encoding
-        // TODO: Remove this fallback once BlazeBinary integration is complete
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [] // Compact format
+        // Use BlazeBinary's BinaryEncoder directly
+        let encoder = BinaryEncoder()
         return try encoder.encode(value)
+        #else
+        throw BlazeTransportError.encodingFailed
+        #endif
     }
 
     /// Decode Data into a Codable type using BlazeBinary.
@@ -49,19 +39,12 @@ internal enum BlazeBinaryHelpers {
     /// - Throws: Decoding errors from BlazeBinary or JSONDecoder
     static func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T {
         #if canImport(BlazeBinary)
-        do {
-            // Use BlazeBinary's BinaryDecoder directly
-            let decoder = BinaryDecoder()
-            return try decoder.decode(type, from: data)
-        } catch {
-            // BlazeBinary decoding failed, fall through to JSON
-        }
-        #endif
-        
-        // Fallback to JSON decoding
-        // TODO: Remove this fallback once BlazeBinary integration is complete
-        let decoder = JSONDecoder()
+        // Use BlazeBinary's BinaryDecoder directly
+        let decoder = BinaryDecoder()
         return try decoder.decode(type, from: data)
+        #else
+        throw BlazeTransportError.decodingFailed
+        #endif
     }
     
     /// Encrypt data using BlazeBinary's AEAD encryption.

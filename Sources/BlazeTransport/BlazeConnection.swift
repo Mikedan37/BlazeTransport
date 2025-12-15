@@ -3,7 +3,7 @@
 import Foundation
 
 /// Internal implementation of BlazeConnection.
-final class DefaultBlazeConnection: BlazeConnection {
+actor DefaultBlazeConnection: BlazeConnection {
     private let host: String
     private let port: UInt16
     private let security: BlazeSecurityConfig

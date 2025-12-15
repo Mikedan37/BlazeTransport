@@ -26,7 +26,7 @@ final class UDPSocket: DatagramSocket {
         #if canImport(Darwin)
         socketFD = Darwin.socket(AF_INET, SOCK_DGRAM, 0)
         #elseif canImport(Glibc)
-        socketFD = Glibc.socket(AF_INET, SOCK_DGRAM, 0)
+        socketFD = Glibc.socket(AF_INET, Int32(SOCK_DGRAM.rawValue), 0)
         #endif
         guard socketFD >= 0 else {
             throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))

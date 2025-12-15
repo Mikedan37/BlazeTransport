@@ -3,7 +3,7 @@ import BlazeBinary
 
 /// Default implementation of BlazeStream protocol.
 /// Handles encoding/decoding of Codable types and delegates to ConnectionManager.
-final class DefaultBlazeStream: BlazeStream {
+actor DefaultBlazeStream: BlazeStream {
     private let streamID: UInt32
     let connectionManager: ConnectionManager
     private var isClosed = false
