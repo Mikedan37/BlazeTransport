@@ -36,7 +36,7 @@ let package = Package(
         ),
         .package(
             url: "git@github.com:Mikedan37/BlazeFSM.git",
-            branch: "main"
+            revision: "58b292a27928d211eef12090cafcbf12b31d69c6"
         ),
     ],
     targets: [
