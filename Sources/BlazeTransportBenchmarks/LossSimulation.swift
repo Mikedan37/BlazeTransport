@@ -40,7 +40,7 @@ internal struct LossSimulation {
                     // Packet arrives, ACK received
                     reliability.noteAckReceived(for: packetNumber)
                     packetsAcked += 1
-                    congestion.onAck(bytesAcked: frameSize)
+                    congestion.onAck(bytesAcked: frameSize, rtt: nil)
                 } else {
                     // Packet lost, will be retransmitted
                     retransmissions += 1

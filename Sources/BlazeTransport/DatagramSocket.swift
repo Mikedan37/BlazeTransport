@@ -65,7 +65,7 @@ final class UDPSocket: DatagramSocket {
                 throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
             }
             #if canImport(Darwin)
-            addr.sin_addr = firstAddr.pointee
+            addr.sin_addr = firstAddr.withMemoryRebound(to: in_addr.self, capacity: 1) { $0.pointee }
             #elseif canImport(Glibc)
             addr.sin_addr = firstAddr.withMemoryRebound(to: in_addr.self, capacity: 1) { $0.pointee }
             #endif
@@ -154,7 +154,7 @@ final class UDPSocket: DatagramSocket {
                 throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
             }
             #if canImport(Darwin)
-            addr.sin_addr = firstAddr.pointee
+            addr.sin_addr = firstAddr.withMemoryRebound(to: in_addr.self, capacity: 1) { $0.pointee }
             #elseif canImport(Glibc)
             addr.sin_addr = firstAddr.withMemoryRebound(to: in_addr.self, capacity: 1) { $0.pointee }
             #endif

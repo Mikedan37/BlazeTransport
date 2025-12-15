@@ -14,14 +14,14 @@ enum PacketParserError: Error {
 
 /// Parser for BlazePacket structures.
 /// Serializes packets to/from Data with big-endian encoding for multi-byte integers.
-internal struct PacketParser {
+public struct PacketParser {
     /// Size of packet header in bytes: 1 (version) + 1 (flags) + 4 (connectionID) + 4 (packetNumber) + 4 (streamID) + 2 (payloadLength) = 16 bytes
-    static let headerSize = 16
+    public static let headerSize = 16
 
     /// Encode a BlazePacket into Data.
     /// - Parameter packet: The packet to encode.
     /// - Returns: Serialized packet data with big-endian integers.
-    static func encode(_ packet: BlazePacket) -> Data {
+    public static func encode(_ packet: BlazePacket) -> Data {
         var data = Data(capacity: headerSize + packet.payload.count)
         
         // Write header fields in big-endian
@@ -42,7 +42,7 @@ internal struct PacketParser {
     /// - Parameter data: The serialized packet data.
     /// - Returns: The decoded packet.
     /// - Throws: `PacketParserError` if the data is invalid or truncated.
-    static func decode(_ data: Data) throws -> BlazePacket {
+    public static func decode(_ data: Data) throws -> BlazePacket {
         guard data.count >= headerSize else {
             throw PacketParserError.bufferTooSmall
         }

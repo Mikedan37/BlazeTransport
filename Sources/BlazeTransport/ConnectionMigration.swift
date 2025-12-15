@@ -3,19 +3,19 @@
 import Foundation
 
 /// Tracks connection migration state and validates address changes.
-internal struct ConnectionMigration {
+public struct ConnectionMigration {
     private(set) var originalAddress: (host: String, port: UInt16)
     private(set) var currentAddress: (host: String, port: UInt16)
     private(set) var migrationCount: Int = 0
     private(set) var lastMigrationTime: Date?
     
-    init(host: String, port: UInt16) {
+    public init(host: String, port: UInt16) {
         self.originalAddress = (host, port)
         self.currentAddress = (host, port)
     }
     
     /// Check if address has changed.
-    func hasAddressChanged(host: String, port: UInt16) -> Bool {
+    public func hasAddressChanged(host: String, port: UInt16) -> Bool {
         return currentAddress.host != host || currentAddress.port != port
     }
     
@@ -44,7 +44,7 @@ internal struct ConnectionMigration {
     }
     
     /// Validate that incoming packet is from expected address.
-    func validateAddress(host: String, port: UInt16) -> Bool {
+    public func validateAddress(host: String, port: UInt16) -> Bool {
         // Allow packets from current address or original address (for migration)
         return (host == currentAddress.host && port == currentAddress.port) ||
                (host == originalAddress.host && port == originalAddress.port)

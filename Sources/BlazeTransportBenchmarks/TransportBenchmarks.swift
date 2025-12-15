@@ -89,7 +89,7 @@ internal struct TransportBenchmarks {
         // Simulate congestion control behavior
         for _ in 0..<iterations {
             // Simulate successful ACK
-            congestion.onAck(bytesAcked: frameSize)
+            congestion.onAck(bytesAcked: frameSize, rtt: nil)
             totalBytesAcked += frameSize
             
             // Occasional loss (5%)

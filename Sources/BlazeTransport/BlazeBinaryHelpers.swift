@@ -4,15 +4,17 @@ import Foundation
 import BlazeBinary
 
 /// Helper functions for BlazeBinary encoding/decoding.
-internal enum BlazeBinaryHelpers {
+public enum BlazeBinaryHelpers {
     /// Encode a Codable value into Data using BlazeBinary.
     ///
     /// - Parameter value: The Codable value to encode
     /// - Returns: Encoded binary data
     /// - Throws: Encoding errors from BlazeBinary
-    static func encode<T: Codable>(_ value: T) throws -> Data {
-        let encoder = BinaryEncoder()
-        return try encoder.encode(value)
+    public static func encode<T: Codable>(_ value: T) throws -> Data {
+        let encoder = BlazeBinaryEncoder()
+        let jsonData = try JSONEncoder().encode(value)
+        encoder.encode(jsonData)
+        return encoder.encodedData()
     }
 
     /// Decode Data into a Codable type using BlazeBinary.
@@ -22,9 +24,10 @@ internal enum BlazeBinaryHelpers {
     ///   - data: The binary data to decode
     /// - Returns: Decoded value of the requested type
     /// - Throws: Decoding errors from BlazeBinary
-    static func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T {
-        let decoder = BinaryDecoder()
-        return try decoder.decode(type, from: data)
+    public static func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T {
+        let decoder = BlazeBinaryDecoder(data: data)
+        let jsonData = try decoder.decodeData()
+        return try JSONDecoder().decode(type, from: jsonData)
     }
     
     /// Encrypt data using BlazeBinary's AEAD encryption.

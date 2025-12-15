@@ -27,9 +27,9 @@ struct PacingController {
 }
 
 /// Manages congestion window and implements AIMD algorithm with QUIC improvements.
-internal struct CongestionController {
-    private(set) var congestionWindowBytes: Int
-    private(set) var ssthresh: Int
+public struct CongestionController {
+    public private(set) var congestionWindowBytes: Int
+    public private(set) var ssthresh: Int
     private(set) var pacing: PacingController
     
     // Loss detection state
@@ -37,13 +37,13 @@ internal struct CongestionController {
     private var recoveryStartTime: Date?
     private var bytesInFlight: Int = 0
 
-    init(initialWindow: Int = 1460, initialSsthresh: Int = 65535) {
+    public init(initialWindow: Int = 1460, initialSsthresh: Int = 65535) {
         self.congestionWindowBytes = initialWindow
         self.ssthresh = initialSsthresh
         self.pacing = PacingController()
     }
 
-    mutating func onAck(bytesAcked: Int, rtt: TimeInterval?) {
+    public mutating func onAck(bytesAcked: Int, rtt: TimeInterval?) {
         bytesInFlight = max(0, bytesInFlight - bytesAcked)
         
         if congestionWindowBytes < ssthresh {
@@ -61,7 +61,7 @@ internal struct CongestionController {
         congestionWindowBytes = min(congestionWindowBytes, 10 * 1024 * 1024) // 10MB max
     }
 
-    mutating func onLoss() {
+    public mutating func onLoss() {
         // AIMD: cut window in half, update ssthresh
         ssthresh = max(congestionWindowBytes / 2, 1460)
         congestionWindowBytes = ssthresh

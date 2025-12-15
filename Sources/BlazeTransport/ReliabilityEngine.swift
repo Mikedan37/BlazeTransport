@@ -4,9 +4,9 @@
 import Foundation
 
 /// ACK range for selective acknowledgment (SACK).
-struct AckRange {
-    let start: UInt32
-    let end: UInt32
+public struct AckRange {
+    public let start: UInt32
+    public let end: UInt32
     
     var count: UInt32 {
         return end - start + 1
@@ -14,37 +14,41 @@ struct AckRange {
 }
 
 /// Tracks packet reliability, acknowledgments, and RTT estimation.
-internal struct ReliabilityEngine {
+public struct ReliabilityEngine {
     private(set) var nextPacketNumber: UInt32 = 1
     var inFlight: [UInt32: Date] = [:]
     
     // QUIC-style RTT estimation (RFC 9002)
-    private(set) var srtt: TimeInterval?  // Smoothed RTT
-    private(set) var rttvar: TimeInterval?  // RTT variance
+    public private(set) var srtt: TimeInterval?  // Smoothed RTT
+    public private(set) var rttvar: TimeInterval?  // RTT variance
     private(set) var minRtt: TimeInterval?  // Minimum observed RTT
     
     // Selective ACK tracking
     private(set) var ackedRanges: [AckRange] = []
     private(set) var largestAcked: UInt32 = 0
     
+    public init() {
+        // All properties have default values
+    }
+    
     // Computed RTT estimate (for backward compatibility)
-    var rttEstimate: TimeInterval? {
+    public var rttEstimate: TimeInterval? {
         guard let srtt = srtt else { return nil }
         // RTO = srtt + 4 * rttvar
         return srtt + (rttvar ?? 0) * 4
     }
 
-    mutating func allocatePacketNumber() -> UInt32 {
+    public mutating func allocatePacketNumber() -> UInt32 {
         let number = nextPacketNumber
         nextPacketNumber = nextPacketNumber &+ 1  // Wraps on overflow
         return number
     }
 
-    mutating func notePacketSent(_ packetNumber: UInt32) {
+    public mutating func notePacketSent(_ packetNumber: UInt32) {
         inFlight[packetNumber] = Date()
     }
 
-    mutating func noteAckReceived(for packetNumber: UInt32) {
+    public mutating func noteAckReceived(for packetNumber: UInt32) {
         guard let sendTime = inFlight.removeValue(forKey: packetNumber) else {
             return
         }
@@ -114,13 +118,13 @@ internal struct ReliabilityEngine {
     }
     
     /// Get ACK ranges for selective acknowledgment frame.
-    mutating func getAckRanges() -> [AckRange] {
+    public mutating func getAckRanges() -> [AckRange] {
         // Return compressed ranges (last 10 ranges)
         return Array(ackedRanges.suffix(10))
     }
     
     /// Check if a packet number has been acknowledged.
-    func isAcked(_ packetNumber: UInt32) -> Bool {
+    public func isAcked(_ packetNumber: UInt32) -> Bool {
         if packetNumber > largestAcked {
             return false
         }
@@ -151,7 +155,7 @@ internal struct ReliabilityEngine {
     }
     
     /// Get retransmission timeout (RTO) based on RTT estimation.
-    func getRTO() -> TimeInterval {
+    public func getRTO() -> TimeInterval {
         guard let srtt = srtt else {
             return 1.0  // Default 1 second
         }

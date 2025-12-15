@@ -15,7 +15,7 @@ actor DefaultBlazeStream: BlazeStream {
 
     /// Send a Codable value over this stream.
     /// The value is encoded using BlazeBinary before transmission.
-    func send<T: Codable>(_ value: T) async throws {
+    func send<T: Codable & Sendable>(_ value: T) async throws {
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }
@@ -30,7 +30,7 @@ actor DefaultBlazeStream: BlazeStream {
 
     /// Receive a Codable value from this stream.
     /// The data is decoded using BlazeBinary after reception.
-    func receive<T: Codable>(_ type: T.Type) async throws -> T {
+    func receive<T: Codable & Sendable>(_ type: T.Type) async throws -> T {
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }

@@ -305,27 +305,27 @@ public protocol BlazeStream: Sendable {
     /// synchronously, but transmission is asynchronous and may be queued if the
     /// congestion window is full.
     ///
-    /// - Parameter value: The value to send (must conform to `Codable`).
+    /// - Parameter value: The value to send (must conform to `Codable` and `Sendable`).
     /// - Throws:
     ///   - `BlazeTransportError.connectionClosed` if the stream or connection is closed
     ///   - `BlazeTransportError.encodingFailed` if encoding fails
     ///   - `BlazeTransportError.timeout` if transmission times out
     /// - Note: Large values may be split across multiple packets automatically.
-    func send<T: Codable>(_ value: T) async throws
+    func send<T: Codable & Sendable>(_ value: T) async throws
     
     /// Receive a Codable value from this stream.
     ///
     /// This method waits until data is available, then decodes it into the requested type.
     /// If the received data does not match the expected type, decoding fails.
     ///
-    /// - Parameter type: The type to decode (must conform to `Codable`).
+    /// - Parameter type: The type to decode (must conform to `Codable` and `Sendable`).
     /// - Returns: The decoded value of the requested type.
     /// - Throws:
     ///   - `BlazeTransportError.connectionClosed` if the stream or connection is closed
     ///   - `BlazeTransportError.decodingFailed` if decoding fails or type mismatch
     ///   - `BlazeTransportError.timeout` if no data arrives within the timeout period
     /// - Note: This method blocks until data is available or the stream is closed.
-    func receive<T: Codable>(_ type: T.Type) async throws -> T
+    func receive<T: Codable & Sendable>(_ type: T.Type) async throws -> T
     
     /// Close this stream.
     ///
