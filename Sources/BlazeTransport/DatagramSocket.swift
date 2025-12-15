@@ -23,14 +23,22 @@ final class UDPSocket: DatagramSocket {
     private var isBound = false
     
     init() throws {
-        socketFD = socket(AF_INET, SOCK_DGRAM, 0)
+        #if canImport(Darwin)
+        socketFD = Darwin.socket(AF_INET, SOCK_DGRAM, 0)
+        #elseif canImport(Glibc)
+        socketFD = Glibc.socket(AF_INET, SOCK_DGRAM, 0)
+        #endif
         guard socketFD >= 0 else {
             throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
         }
         
         // Set socket options
         var reuseAddr: Int32 = 1
-        setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
+        #if canImport(Darwin)
+        Darwin.setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
+        #elseif canImport(Glibc)
+        Glibc.setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
+        #endif
     }
     
     private var boundPort: UInt16?
@@ -45,16 +53,31 @@ final class UDPSocket: DatagramSocket {
         if host == "0.0.0.0" || host == "127.0.0.1" || host == "localhost" {
             addr.sin_addr.s_addr = in_addr_t(INADDR_ANY)
         } else {
-            var hostent = gethostbyname(host)
+            #if canImport(Darwin)
+            var hostent = Darwin.gethostbyname(host)
+            #elseif canImport(Glibc)
+            var hostent = Glibc.gethostbyname(host)
+            #endif
             guard hostent != nil else {
                 throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
             }
-            addr.sin_addr = hostent!.pointee.h_addr_list[0]!.pointee
+            guard let addrList = hostent!.pointee.h_addr_list, let firstAddr = addrList[0] else {
+                throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
+            }
+            #if canImport(Darwin)
+            addr.sin_addr = firstAddr.pointee
+            #elseif canImport(Glibc)
+            addr.sin_addr = firstAddr.withMemoryRebound(to: in_addr.self, capacity: 1) { $0.pointee }
+            #endif
         }
         
         let result = withUnsafePointer(to: &addr) { ptr in
             ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                #if canImport(Darwin)
                 Darwin.bind(socketFD, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                #elseif canImport(Glibc)
+                Glibc.bind(socketFD, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                #endif
             }
         }
         
@@ -67,7 +90,11 @@ final class UDPSocket: DatagramSocket {
         var addrLen = socklen_t(MemoryLayout<sockaddr_in>.size)
         let getsocknameResult = withUnsafeMutablePointer(to: &boundAddr) { ptr in
             ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                #if canImport(Darwin)
                 Darwin.getsockname(socketFD, sockaddrPtr, &addrLen)
+                #elseif canImport(Glibc)
+                Glibc.getsockname(socketFD, sockaddrPtr, &addrLen)
+                #endif
             }
         }
         
@@ -86,7 +113,13 @@ final class UDPSocket: DatagramSocket {
         }
         
         var bufferSize = Int32(size)
-        let result = setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &bufferSize, socklen_t(MemoryLayout<Int32>.size))
+        #if canImport(Darwin)
+        let result = Darwin.setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &bufferSize, socklen_t(MemoryLayout<Int32>.size))
+        #elseif canImport(Glibc)
+        let result = Glibc.setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &bufferSize, socklen_t(MemoryLayout<Int32>.size))
+        #else
+        let result = -1
+        #endif
         
         guard result == 0 else {
             throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
@@ -109,17 +142,32 @@ final class UDPSocket: DatagramSocket {
         if host == "127.0.0.1" || host == "localhost" {
             addr.sin_addr.s_addr = in_addr_t(0x7F000001) // 127.0.0.1
         } else {
-            var hostent = gethostbyname(host)
+            #if canImport(Darwin)
+            var hostent = Darwin.gethostbyname(host)
+            #elseif canImport(Glibc)
+            var hostent = Glibc.gethostbyname(host)
+            #endif
             guard hostent != nil else {
                 throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
             }
-            addr.sin_addr = hostent!.pointee.h_addr_list[0]!.pointee
+            guard let addrList = hostent!.pointee.h_addr_list, let firstAddr = addrList[0] else {
+                throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
+            }
+            #if canImport(Darwin)
+            addr.sin_addr = firstAddr.pointee
+            #elseif canImport(Glibc)
+            addr.sin_addr = firstAddr.withMemoryRebound(to: in_addr.self, capacity: 1) { $0.pointee }
+            #endif
         }
         
         let result = data.withUnsafeBytes { bytes in
             withUnsafePointer(to: &addr) { ptr in
                 ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                    #if canImport(Darwin)
                     Darwin.sendto(socketFD, bytes.baseAddress, bytes.count, 0, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                    #elseif canImport(Glibc)
+                    Glibc.sendto(socketFD, bytes.baseAddress, bytes.count, 0, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                    #endif
                 }
             }
         }
@@ -141,7 +189,11 @@ final class UDPSocket: DatagramSocket {
         let result = buffer.withUnsafeMutableBytes { bytes in
             withUnsafeMutablePointer(to: &addr) { ptr in
                 ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
+                    #if canImport(Darwin)
                     Darwin.recvfrom(socketFD, bytes.baseAddress, maxBytes, 0, sockaddrPtr, &addrLen)
+                    #elseif canImport(Glibc)
+                    Glibc.recvfrom(socketFD, bytes.baseAddress, maxBytes, 0, sockaddrPtr, &addrLen)
+                    #endif
                 }
             }
         }
@@ -152,7 +204,13 @@ final class UDPSocket: DatagramSocket {
         
         buffer = buffer.prefix(result)
         
-        let host = String(cString: inet_ntoa(addr.sin_addr))
+        #if canImport(Darwin)
+        let host = String(cString: Darwin.inet_ntoa(addr.sin_addr))
+        #elseif canImport(Glibc)
+        var sinAddr = addr.sin_addr
+        let hostCString = Glibc.inet_ntoa(sinAddr)
+        let host = hostCString != nil ? String(cString: hostCString!) : "0.0.0.0"
+        #endif
         let port = UInt16(bigEndian: addr.sin_port)
         
         return (buffer, host, port)
@@ -162,10 +220,13 @@ final class UDPSocket: DatagramSocket {
         guard socketFD >= 0 else { return }
         
         // Graceful shutdown: disable sends first
+        #if canImport(Darwin)
         Darwin.shutdown(socketFD, SHUT_WR)
-        
-        // Close socket (receives will fail gracefully)
         Darwin.close(socketFD)
+        #elseif canImport(Glibc)
+        Glibc.shutdown(socketFD, SHUT_WR)
+        Glibc.close(socketFD)
+        #endif
         socketFD = -1
         isBound = false
         boundPort = nil
@@ -173,7 +234,11 @@ final class UDPSocket: DatagramSocket {
     
     deinit {
         if socketFD >= 0 {
+            #if canImport(Darwin)
             Darwin.close(socketFD)
+            #elseif canImport(Glibc)
+            Glibc.close(socketFD)
+            #endif
         }
     }
 }

@@ -9,7 +9,6 @@ final class DefaultBlazeConnection: BlazeConnection {
     private let security: BlazeSecurityConfig
     let connectionManager: ConnectionManager
     private var isStarted = false
-    private let startLock = NSLock()
 
     init(host: String, port: UInt16, security: BlazeSecurityConfig, useMockSocket: Bool = false) {
         self.host = host
@@ -19,9 +18,6 @@ final class DefaultBlazeConnection: BlazeConnection {
     }
 
     func start() async throws {
-        startLock.lock()
-        defer { startLock.unlock() }
-        
         guard !isStarted else { return }
         isStarted = true
         try await connectionManager.start()

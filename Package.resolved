@@ -1,5 +1,5 @@
 {
-  "originHash" : "babad5fbae90cc7dd6cb740198b8d0c7d16c74bc400f8bda777795d9fae406b3",
+  "originHash" : "d74a0058b596875e3425af4d3e8bbdbfea2535247bd0909034b83d7a86f8e77a",
   "pins" : [
     {
       "identity" : "blazebinary",
@@ -15,8 +15,7 @@
       "kind" : "remoteSourceControl",
       "location" : "git@github.com:Mikedan37/BlazeFSM.git",
       "state" : {
-        "branch" : "main",
-        "revision" : "5edf704ba7fa2882ae7327cb0ea62c17b9e295c5"
+        "revision" : "58b292a27928d211eef12090cafcbf12b31d69c6"
       }
     },
     {

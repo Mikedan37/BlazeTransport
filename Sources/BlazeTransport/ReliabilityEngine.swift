@@ -34,7 +34,7 @@ internal struct ReliabilityEngine {
         return srtt + (rttvar ?? 0) * 4
     }
 
-    mutating func nextPacketNumber() -> UInt32 {
+    mutating func allocatePacketNumber() -> UInt32 {
         let number = nextPacketNumber
         nextPacketNumber = nextPacketNumber &+ 1  // Wraps on overflow
         return number

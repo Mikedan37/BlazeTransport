@@ -28,7 +28,7 @@ internal struct LossSimulation {
             
             // Simulate sending packets with loss
             for i in 0..<packetsToSend {
-                let packetNumber = reliability.nextPacketNumber()
+                let packetNumber = reliability.allocatePacketNumber()
                 reliability.notePacketSent(packetNumber)
                 packetsSent += 1
                 totalBytesSent += frameSize

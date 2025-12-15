@@ -1,73 +1,59 @@
 import Foundation
 
+/// Shared registry for mock socket communication.
+/// Uses nonisolated(unsafe) for test-only code to avoid Swift 6 concurrency issues.
+enum MockSocketRegistry {
+    nonisolated(unsafe) static var sockets: [String: MockDatagramSocket] = [:]
+}
+
 /// Mock datagram socket for testing and benchmarks.
 /// Provides in-memory loopback without real network I/O.
 final class MockDatagramSocket: DatagramSocket {
     private var boundAddress: (host: String, port: UInt16)?
     private var receiveQueue: [(Data, String, UInt16)] = []
     private var isClosed = false
-    private let lock = NSLock()
-    
-    // Shared registry for loopback communication
-    private static var sockets: [String: MockDatagramSocket] = [:]
-    private static let registryLock = NSLock()
     
     private func addressKey(host: String, port: UInt16) -> String {
         return "\(host):\(port)"
     }
     
     func bind(host: String, port: UInt16) throws {
-        lock.lock()
-        defer { lock.unlock() }
-        
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }
         
-        let key = addressKey(host, port)
-        MockDatagramSocket.registryLock.lock()
-        defer { MockDatagramSocket.registryLock.unlock() }
-        
-        guard MockDatagramSocket.sockets[key] == nil else {
-            throw BlazeTransportError.underlying(NSError(domain: "MockSocket", code: EADDRINUSE, userInfo: nil))
+        let key = addressKey(host: host, port: port)
+        guard MockSocketRegistry.sockets[key] == nil else {
+            throw BlazeTransportError.underlying(NSError(domain: "MockSocket", code: Int(EADDRINUSE), userInfo: nil))
         }
         
         boundAddress = (host, port)
-        MockDatagramSocket.sockets[key] = self
+        MockSocketRegistry.sockets[key] = self
     }
     
     func send(to host: String, port: UInt16, data: Data) throws {
-        lock.lock()
-        defer { lock.unlock() }
-        
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }
         
-        let key = addressKey(host, port)
-        MockDatagramSocket.registryLock.lock()
-        defer { MockDatagramSocket.registryLock.unlock() }
-        
-        if let targetSocket = MockDatagramSocket.sockets[key] {
-            targetSocket.lock.lock()
-            defer { targetSocket.lock.unlock() }
-            targetSocket.receiveQueue.append((data, host, port))
+        let key = addressKey(host: host, port: port)
+        if let targetSocket = MockSocketRegistry.sockets[key] {
+            targetSocket.enqueue(data: data, fromHost: host, fromPort: port)
         }
     }
     
+    private func enqueue(data: Data, fromHost: String, fromPort: UInt16) {
+        receiveQueue.append((data, fromHost, fromPort))
+    }
+    
     func receive(maxBytes: Int) throws -> (Data, String, UInt16) {
-        lock.lock()
-        defer { lock.unlock() }
-        
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }
         
         // Wait for data (simplified - in real implementation would use async/await)
         while receiveQueue.isEmpty {
-            lock.unlock()
             Thread.sleep(forTimeInterval: 0.001) // 1ms
-            lock.lock()
             
             if isClosed {
                 throw BlazeTransportError.connectionClosed
@@ -78,17 +64,12 @@ final class MockDatagramSocket: DatagramSocket {
     }
     
     func close() throws {
-        lock.lock()
-        defer { lock.unlock() }
-        
         guard !isClosed else { return }
         isClosed = true
         
         if let bound = boundAddress {
             let key = addressKey(host: bound.host, port: bound.port)
-            MockDatagramSocket.registryLock.lock()
-            defer { MockDatagramSocket.registryLock.unlock() }
-            MockDatagramSocket.sockets.removeValue(forKey: key)
+            MockSocketRegistry.sockets.removeValue(forKey: key)
         }
     }
     
@@ -97,8 +78,6 @@ final class MockDatagramSocket: DatagramSocket {
     }
     
     func getBoundPort() -> UInt16? {
-        lock.lock()
-        defer { lock.unlock() }
         return boundAddress?.port
     }
 }

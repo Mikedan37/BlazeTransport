@@ -67,7 +67,7 @@ func testBackpressureExtremeLoad() async throws {
     
     // Simulate extreme load: many packets, high loss rate
     for _ in 0..<10000 {
-        let packetNumber = reliability.nextPacketNumber()
+        let packetNumber = reliability.allocatePacketNumber()
         reliability.notePacketSent(packetNumber)
         
         // 10% loss rate
@@ -82,6 +82,6 @@ func testBackpressureExtremeLoad() async throws {
     // Should still be in valid state
     #expect(congestion.congestionWindowBytes > 0)
     #expect(congestion.ssthresh > 0)
-    #expect(reliability.nextPacketNumber() > 0)
+    #expect(reliability.allocatePacketNumber() > 0)
 }
 

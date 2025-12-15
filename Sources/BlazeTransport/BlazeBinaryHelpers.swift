@@ -11,10 +11,6 @@ import BlazeBinary
 
 /// Helper functions for BlazeBinary encoding/decoding.
 internal enum BlazeBinaryHelpers {
-    /// Flag to control whether to use BlazeBinary or JSON fallback.
-    /// Set to `false` in production to ensure BlazeBinary is used.
-    static var useBlazeBinary: Bool = true
-    
     /// Encode a Codable value into Data using BlazeBinary.
     ///
     /// Uses BlazeBinary's binary encoding for efficient serialization when available.
@@ -25,25 +21,12 @@ internal enum BlazeBinaryHelpers {
     /// - Throws: Encoding errors from BlazeBinary or JSONEncoder
     static func encode<T: Codable>(_ value: T) throws -> Data {
         #if canImport(BlazeBinary)
-        if useBlazeBinary {
-            // Try BlazeBinary encoding first
-            // Note: Adjust this based on actual BlazeBinary API
-            // Common patterns:
-            //   - BinaryEncoder().encode(value)
-            //   - BlazeBinary.encode(value)
-            //   - BlazeBinary.Encoder().encode(value)
-            do {
-                // Attempt to use BlazeBinary's encoder
-                // This will be updated once BlazeBinary API is finalized
-                if let encoderType = NSClassFromString("BinaryEncoder") as? NSObject.Type {
-                    if let encoder = encoderType.init() as? AnyObject {
-                        // Try to call encode method via reflection or type casting
-                        // For now, fall through to JSON
-                    }
-                }
-            } catch {
-                // BlazeBinary encoding failed, fall through to JSON
-            }
+        do {
+            // Use BlazeBinary's BinaryEncoder directly
+            let encoder = BinaryEncoder()
+            return try encoder.encode(value)
+        } catch {
+            // BlazeBinary encoding failed, fall through to JSON
         }
         #endif
         
@@ -66,21 +49,12 @@ internal enum BlazeBinaryHelpers {
     /// - Throws: Decoding errors from BlazeBinary or JSONDecoder
     static func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T {
         #if canImport(BlazeBinary)
-        if useBlazeBinary {
-            // Try BlazeBinary decoding first
-            // Note: Adjust this based on actual BlazeBinary API
-            do {
-                // Attempt to use BlazeBinary's decoder
-                // This will be updated once BlazeBinary API is finalized
-                if let decoderType = NSClassFromString("BinaryDecoder") as? NSObject.Type {
-                    if let decoder = decoderType.init() as? AnyObject {
-                        // Try to call decode method via reflection or type casting
-                        // For now, fall through to JSON
-                    }
-                }
-            } catch {
-                // BlazeBinary decoding failed, fall through to JSON
-            }
+        do {
+            // Use BlazeBinary's BinaryDecoder directly
+            let decoder = BinaryDecoder()
+            return try decoder.decode(type, from: data)
+        } catch {
+            // BlazeBinary decoding failed, fall through to JSON
         }
         #endif
         
@@ -100,18 +74,16 @@ internal enum BlazeBinaryHelpers {
     /// - Throws: Encryption errors
     static func encrypt(_ data: Data, key: Data, nonce: UInt64) throws -> Data {
         #if canImport(BlazeBinary)
-        if useBlazeBinary {
-            // Use BlazeBinary's AEAD encryption
-            // This will be implemented once BlazeBinary API is finalized
-            // For now, return data as-is (no encryption in fallback mode)
-        }
+        // Use BlazeBinary's AEAD encryption
+        // This will be implemented once BlazeBinary API is finalized
+        // For now, return data as-is (no encryption in fallback mode)
         #endif
         
         // Fallback: no encryption (for testing only)
         // TODO: Implement proper encryption once BlazeBinary API is available
         return data
     }
-    
+
     /// Decrypt data using BlazeBinary's AEAD decryption.
     ///
     /// - Parameters:
@@ -122,11 +94,9 @@ internal enum BlazeBinaryHelpers {
     /// - Throws: Decryption errors (including authentication failures)
     static func decrypt(_ data: Data, key: Data, nonce: UInt64) throws -> Data {
         #if canImport(BlazeBinary)
-        if useBlazeBinary {
-            // Use BlazeBinary's AEAD decryption
-            // This will be implemented once BlazeBinary API is finalized
-            // For now, return data as-is (no decryption in fallback mode)
-        }
+        // Use BlazeBinary's AEAD decryption
+        // This will be implemented once BlazeBinary API is finalized
+        // For now, return data as-is (no decryption in fallback mode)
         #endif
         
         // Fallback: no decryption (for testing only)

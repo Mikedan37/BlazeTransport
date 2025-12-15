@@ -17,7 +17,7 @@ func testPacketLossRecovery() async throws {
     
     // Simulate sending packets with 5% loss
     for i in 0..<totalPackets {
-        let packetNumber = reliability.nextPacketNumber()
+        let packetNumber = reliability.allocatePacketNumber()
         reliability.notePacketSent(packetNumber)
         packetsSent += 1
         
