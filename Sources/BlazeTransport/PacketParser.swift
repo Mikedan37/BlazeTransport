@@ -3,7 +3,7 @@
 import Foundation
 
 /// Errors that can occur during packet parsing.
-enum PacketParserError: Error {
+public enum PacketParserError: Error {
     /// Packet data is truncated (incomplete).
     case truncated
     /// Payload length doesn't match header.

@@ -19,7 +19,7 @@ final class LinuxDatagramSocket: DatagramSocket {
         Glibc.setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
         
         // Set non-blocking mode using fcntl
-        var flags = Glibc.fcntl(socketFD, F_GETFL, 0)
+        let flags = Glibc.fcntl(socketFD, F_GETFL, 0)
         guard flags >= 0 else {
             Glibc.close(socketFD)
             throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))

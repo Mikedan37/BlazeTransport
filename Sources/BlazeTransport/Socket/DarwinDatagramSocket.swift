@@ -19,7 +19,7 @@ final class DarwinDatagramSocket: DatagramSocket {
         Darwin.setsockopt(socketFD, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, socklen_t(MemoryLayout<Int32>.size))
         
         // Set non-blocking mode
-        var flags = Darwin.fcntl(socketFD, F_GETFL, 0)
+        let flags = Darwin.fcntl(socketFD, F_GETFL, 0)
         guard flags >= 0 else {
             Darwin.close(socketFD)
             throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
