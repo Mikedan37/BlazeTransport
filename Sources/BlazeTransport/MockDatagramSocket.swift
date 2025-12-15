@@ -85,7 +85,7 @@ final class MockDatagramSocket: DatagramSocket {
         isClosed = true
         
         if let bound = boundAddress {
-            let key = addressKey(bound.host, bound.port)
+            let key = addressKey(host: bound.host, port: bound.port)
             MockDatagramSocket.registryLock.lock()
             defer { MockDatagramSocket.registryLock.unlock() }
             MockDatagramSocket.sockets.removeValue(forKey: key)

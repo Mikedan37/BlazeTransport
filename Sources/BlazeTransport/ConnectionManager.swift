@@ -99,7 +99,7 @@ actor ConnectionManager {
                 }
                 
                 // Create packet with frame data
-                let packetNumber = reliability.nextPacketNumber()
+                let packetNumber = reliability.allocatePacketNumber()
                 let packet = BlazePacket(
                     header: BlazePacketHeader(
                         version: 1,
@@ -149,7 +149,7 @@ actor ConnectionManager {
             framePayload.append(BlazeFrameType.data.rawValue)
             framePayload.append(frameData)
             
-            let packetNumber = reliability.nextPacketNumber()
+            let packetNumber = reliability.allocatePacketNumber()
             let packet = BlazePacket(
                 header: BlazePacketHeader(
                     version: 1,
@@ -283,7 +283,7 @@ actor ConnectionManager {
                     version: 1,
                     flags: 0,
                     connectionID: 0,
-                    packetNumber: reliability.nextPacketNumber(),
+                    packetNumber: reliability.allocatePacketNumber(),
                     streamID: 0, // ACK frames use streamID 0
                     payloadLength: UInt16(ackFrame.count)
                 ),
@@ -428,7 +428,7 @@ actor ConnectionManager {
                             version: effectPacket.header.version,
                             flags: effectPacket.header.flags,
                             connectionID: effectPacket.header.connectionID,
-                            packetNumber: reliability.nextPacketNumber(),
+                            packetNumber: reliability.allocatePacketNumber(),
                             streamID: effectPacket.header.streamID,
                             payloadLength: UInt16(effectPacket.payload.count)
                         ),
@@ -474,7 +474,7 @@ actor ConnectionManager {
     }
     
     private func handleTimeout(timerID: String) async {
-        let effects = connectionMachine.process(.timeout(timerID))
+        let effects = connectionMachine.process(ConnectionEvent.timeout(timerID))
         await applyEffects(effects, packet: nil)
         
         // Handle retransmission timeout

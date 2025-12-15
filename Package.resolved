@@ -1,6 +1,24 @@
 {
-  "originHash" : "91720e250592fb1110427f808850f508f9dca221ebd8bae3795e27abf8866890",
+  "originHash" : "babad5fbae90cc7dd6cb740198b8d0c7d16c74bc400f8bda777795d9fae406b3",
   "pins" : [
+    {
+      "identity" : "blazebinary",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:Mikedan37/BlazeBinary.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "83e5d3600d5a021c280273ac743abffb3274d9c3"
+      }
+    },
+    {
+      "identity" : "blazefsm",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:Mikedan37/BlazeFSM.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "5edf704ba7fa2882ae7327cb0ea62c17b9e295c5"
+      }
+    },
     {
       "identity" : "swift-asn1",
       "kind" : "remoteSourceControl",

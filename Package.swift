@@ -30,9 +30,14 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(path: "../BlazeBinary"),
-        .package(path: "../BlazeFSM"),
-        .package(path: "../BlazeDB"),
+        .package(
+            url: "git@github.com:Mikedan37/BlazeBinary.git",
+            branch: "main"
+        ),
+        .package(
+            url: "git@github.com:Mikedan37/BlazeFSM.git",
+            branch: "main"
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -42,7 +47,6 @@ let package = Package(
             dependencies: [
                 .product(name: "BlazeBinary", package: "BlazeBinary"),
                 .product(name: "BlazeFSM", package: "BlazeFSM"),
-                .product(name: "BlazeDB", package: "BlazeDB"),
             ]
         ),
         .testTarget(
