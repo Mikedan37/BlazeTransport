@@ -41,7 +41,7 @@ final class DarwinDatagramSocket: DatagramSocket {
         if host == "0.0.0.0" || host == "127.0.0.1" || host == "localhost" {
             addr.sin_addr.s_addr = in_addr_t(INADDR_ANY)
         } else {
-            var hostent = Darwin.gethostbyname(host)
+            let hostent = Darwin.gethostbyname(host)
             guard hostent != nil else {
                 throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
             }
@@ -108,7 +108,7 @@ final class DarwinDatagramSocket: DatagramSocket {
         if host == "127.0.0.1" || host == "localhost" {
             addr.sin_addr.s_addr = in_addr_t(0x7F000001) // 127.0.0.1
         } else {
-            var hostent = Darwin.gethostbyname(host)
+            let hostent = Darwin.gethostbyname(host)
             guard hostent != nil else {
                 throw BlazeTransportError.underlying(NSError(domain: "UDPSocket", code: Int(errno), userInfo: nil))
             }
