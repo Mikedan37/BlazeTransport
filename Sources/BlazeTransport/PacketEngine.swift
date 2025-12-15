@@ -33,7 +33,7 @@ actor PacketEngine {
             if useMockSocket {
                 socket = MockDatagramSocket()
             } else {
-                socket = try UDPSocket()
+                socket = try PlatformDatagramSocket()
             }
         }
         
