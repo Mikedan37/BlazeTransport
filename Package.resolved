@@ -1,10 +1,9 @@
 {
-  "originHash" : "d74a0058b596875e3425af4d3e8bbdbfea2535247bd0909034b83d7a86f8e77a",
   "pins" : [
     {
       "identity" : "blazebinary",
       "kind" : "remoteSourceControl",
-      "location" : "git@github.com:Mikedan37/BlazeBinary.git",
+      "location" : "https://github.com/Mikedan37/BlazeBinary.git",
       "state" : {
         "branch" : "main",
         "revision" : "83e5d3600d5a021c280273ac743abffb3274d9c3"
@@ -13,7 +12,7 @@
     {
       "identity" : "blazefsm",
       "kind" : "remoteSourceControl",
-      "location" : "git@github.com:Mikedan37/BlazeFSM.git",
+      "location" : "https://github.com/Mikedan37/BlazeFSM.git",
       "state" : {
         "revision" : "58b292a27928d211eef12090cafcbf12b31d69c6"
       }
@@ -37,5 +36,5 @@
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }
