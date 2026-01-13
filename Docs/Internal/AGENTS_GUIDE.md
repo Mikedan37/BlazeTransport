@@ -35,12 +35,12 @@ This guide is designed for AI agents and developers who need to understand, use,
 
 | Feature | BlazeTransport | TCP | QUIC | HTTP/2 |
 |---------|---------------|-----|------|--------|
-| Native Swift API | ✅ | ❌ | ❌ | ❌ |
-| Type-Safe (Codable) | ✅ | ❌ | ❌ | ❌ |
-| Multi-Stream | ✅ (32) | ❌ | ✅ | ✅ |
-| No Head-of-Line Blocking | ✅ | ❌ | ✅ | ❌ |
-| Built-in Encryption | ✅ | ❌ (TLS) | ✅ | ❌ (TLS) |
-| Connection Migration | ✅ | ❌ | ✅ | ❌ |
+| Native Swift API | Yes | No | No | No |
+| Type-Safe (Codable) | Yes | No | No | No |
+| Multi-Stream | Yes (32) | No | Yes | Yes |
+| No Head-of-Line Blocking | Yes | No | Yes | No |
+| Built-in Encryption | Yes | No (TLS) | Yes | No (TLS) |
+| Connection Migration | Yes | No | Yes | No |
 
 ### When to Use BlazeTransport
 
@@ -567,11 +567,11 @@ func connectWithRetry(host: String, port: UInt16, maxRetries: Int = 3) async thr
 ### Security Guarantees
 
 BlazeTransport defends against:
-- ✅ **Eavesdropping**: All data encrypted with AEAD
-- ✅ **Tampering**: Poly1305 authentication tag detects modifications
-- ✅ **Replay Attacks**: Nonce-based replay window
-- ✅ **Man-in-the-Middle**: X25519 key exchange prevents MITM
-- ✅ **Connection Hijacking**: Cryptographic authentication required
+- **Eavesdropping**: All data encrypted with AEAD
+- **Tampering**: Poly1305 authentication tag detects modifications
+- **Replay Attacks**: Nonce-based replay window
+- **Man-in-the-Middle**: X25519 key exchange prevents MITM
+- **Connection Hijacking**: Cryptographic authentication required
 
 ---
 
@@ -733,14 +733,14 @@ do {
 ### 1. Always Use `.blazeDefault` Security in Production
 
 ```swift
-// ✅ Good
+// Good
 let connection = try await BlazeTransport.connect(
     host: "example.com",
     port: 9999,
     security: .blazeDefault
 )
 
-// ❌ Bad (testing only)
+// Bad (testing only)
 let connection = try await BlazeTransport.connect(
     host: "example.com",
     port: 9999,
@@ -751,20 +751,20 @@ let connection = try await BlazeTransport.connect(
 ### 2. Close Streams and Connections Explicitly
 
 ```swift
-// ✅ Good
+// Good
 defer {
     try? await stream.close()
     try? await connection.close()
 }
 
-// ❌ Bad (resource leak)
+// Bad (resource leak)
 // Streams and connections not closed
 ```
 
 ### 3. Handle Errors Appropriately
 
 ```swift
-// ✅ Good
+// Good
 do {
     let connection = try await BlazeTransport.connect(...)
     // Use connection
@@ -774,14 +774,14 @@ do {
     // General error handling
 }
 
-// ❌ Bad
+// Bad
 let connection = try! await BlazeTransport.connect(...)  // Force unwrap
 ```
 
 ### 4. Use Type Safety
 
 ```swift
-// ✅ Good
+// Good
 struct User: Codable {
     let id: Int
     let name: String
@@ -789,34 +789,34 @@ struct User: Codable {
 try await stream.send(User(id: 1, name: "Alice"))
 let user: User = try await stream.receive(User.self)
 
-// ❌ Bad (loses type safety)
+// Bad (loses type safety)
 try await stream.send(["id": 1, "name": "Alice"] as [String: Any])  // Not Codable
 ```
 
 ### 5. Monitor Connection Statistics
 
 ```swift
-// ✅ Good
+// Good
 let stats = await connection.stats()
 if stats.lossRate > 0.05 {
     // Adapt behavior for poor network conditions
 }
 
-// ❌ Bad
+// Bad
 // No monitoring, no adaptation to network conditions
 ```
 
 ### 6. Use Concurrent Streams for Parallelism
 
 ```swift
-// ✅ Good (parallel streams)
+// Good (parallel streams)
 let stream1 = try await connection.openStream()
 let stream2 = try await connection.openStream()
 async let task1 = Task { try await stream1.send("Data 1") }
 async let task2 = Task { try await stream2.send("Data 2") }
 try await (task1.value, task2.value)
 
-// ❌ Bad (sequential)
+// Bad (sequential)
 try await stream.send("Data 1")
 try await stream.send("Data 2")  // Blocks until first completes
 ```
@@ -824,7 +824,7 @@ try await stream.send("Data 2")  // Blocks until first completes
 ### 7. Implement Timeouts for Long-Running Operations
 
 ```swift
-// ✅ Good
+// Good
 let connection = try await withTimeout(seconds: 5) {
     try await BlazeTransport.connect(host: "example.com", port: 9999)
 }
@@ -955,13 +955,13 @@ print("Received: \(stats.bytesReceived) bytes")
 
 BlazeTransport is a production-ready, Swift-native transport protocol that provides:
 
-- ✅ Reliable UDP transport with automatic retransmission
-- ✅ Multi-streaming (32 concurrent streams per connection)
-- ✅ Type-safe messaging with Codable
-- ✅ Built-in encryption (X25519 + ChaCha20-Poly1305)
-- ✅ Congestion control (AIMD algorithm)
-- ✅ Connection migration (WiFi ↔ Cellular)
-- ✅ Zero C interop overhead
+- Reliable UDP transport with automatic retransmission
+- Multi-streaming (32 concurrent streams per connection)
+- Type-safe messaging with Codable
+- Built-in encryption (X25519 + ChaCha20-Poly1305)
+- Congestion control (AIMD algorithm)
+- Connection migration (WiFi ↔ Cellular)
+- Zero C interop overhead
 
 **Key API:**
 - `BlazeTransport.connect()` - Establish connection

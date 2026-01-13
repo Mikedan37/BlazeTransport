@@ -36,7 +36,7 @@ struct BlazeTransportFuzzing {
             testAEADTagCorruption(&stats)
         }
         
-        print("\n✅ Fuzzing completed")
+        print("\nFuzzing completed")
         print("\n📊 Statistics:")
         print("  Random frames generated: \(stats.randomFramesGenerated)")
         print("  Corrupted frames tested: \(stats.corruptedFramesTested)")

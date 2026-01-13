@@ -1,6 +1,12 @@
 # BlazeTransport
 
-A QUIC-lite Swift-native transport protocol with multi-streaming, reliability, congestion control, and typed messaging. BlazeTransport provides a high-level, type-safe API for establishing connections, opening streams, and sending/receiving Codable messages over a reliable, congestion-controlled transport layer built on UDP. It's designed for Swift applications that need low-latency, reliable message delivery with multiple concurrent streams, built-in encryption, and QUIC-like performance without C interop overhead.
+> **Experimental (v0.1)** — This is an experimental, Swift-native transport engine designed to explore QUIC-inspired design patterns without C interop. It is intended for research, prototyping, and Swift-first systems, **not as a drop-in replacement for production QUIC stacks**.
+
+BlazeTransport is a QUIC-inspired, Swift-native transport protocol with multi-streaming, reliability, congestion control, and typed messaging. It provides a high-level, type-safe API for establishing connections, opening streams, and sending/receiving Codable messages over a reliable, congestion-controlled transport layer built on UDP.
+
+**This project explores** how modern transport protocols (QUIC, HTTP/2) can be implemented natively in Swift with zero C interop overhead, while maintaining type safety and leveraging Swift concurrency.
+
+**This project is not** a production-ready replacement for QUIC, TCP, or HTTP/2. It's a research implementation that demonstrates systems-level Swift capabilities.
 
 ## Quick Start
 
@@ -31,6 +37,38 @@ try await connection.close()
 ```
 
 See [Examples/](Examples/) for complete echo server and client implementations.
+
+## Status & Version
+
+**Current Version**: v0.1.0 (Experimental)
+
+**What's Working**:
+- Multi-stream multiplexing (up to 32 streams)
+- Reliable message delivery with retransmission
+- Congestion control (AIMD algorithm)
+- Built-in encryption (ChaCha20-Poly1305 + X25519)
+- Connection migration support
+- Type-safe Codable messaging
+- Performance: 70-85% of QUIC benchmarks
+
+**What's Missing** (and why this is experimental):
+- 0-RTT handshakes (planned for v0.3+)
+- HTTP/3 support (use QUIC directly if needed)
+- Certificate-based authentication (uses simplified key exchange)
+- Production hardening (no DDoS protection, rate limiting)
+- Cross-platform support (macOS/iOS only currently)
+- Battle-tested deployment base
+
+**Intended Use Cases**:
+- Research and experimentation with transport protocols
+- Swift-native applications that want to avoid C interop
+- Prototyping new communication patterns
+- Learning systems-level Swift programming
+
+**Not Intended For**:
+- Production systems requiring maximum reliability
+- Systems that need HTTP/3 or standard QUIC compatibility
+- Applications requiring battle-tested protocol implementations
 
 ## System Architecture
 
@@ -523,22 +561,28 @@ flowchart TD
 
 ## Why BlazeTransport?
 
-BlazeTransport provides **QUIC-like performance** with **zero C interop overhead** for Swift applications. It combines the best aspects of modern transport protocols (QUIC, HTTP/2) with native Swift type safety and async/await concurrency.
+BlazeTransport explores what's possible when implementing QUIC-inspired transport patterns **entirely in Swift** with zero C interop overhead. It demonstrates that Swift can handle systems-level work—congestion control, reliability, crypto, state machines—while maintaining type safety and leveraging modern Swift concurrency.
+
+**This is not a production replacement for QUIC or TCP.** It's a research implementation that shows:
+- How transport protocols can be built natively in Swift
+- What performance characteristics emerge without C interop overhead
+- How type safety can be preserved at the transport layer
+- What trade-offs exist between native Swift and battle-tested C implementations
 
 ### Key Advantages
 
 | Feature | BlazeTransport | QUIC (C++) | TCP | HTTP/2 | WebSocket |
 |---------|---------------|------------|-----|--------|-----------|
-| **Native Swift API** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Type-Safe Messaging** | ✅ (Codable) | ❌ | ❌ | ❌ | ❌ |
-| **Multi-Stream** | ✅ (32 streams) | ✅ | ❌ | ✅ | ❌ |
-| **No Head-of-Line Blocking** | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Connection Migration** | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Built-in Encryption** | ✅ (AEAD) | ✅ | ❌ (TLS) | ❌ (TLS) | ❌ (TLS) |
-| **Loss Recovery** | ✅ (92% @ 5% loss) | ✅ (94%) | ⚠️ (80%) | ⚠️ (78%) | ⚠️ (79%) |
+| **Native Swift API** | Yes | No | No | No | No |
+| **Type-Safe Messaging** | Yes (Codable) | No | No | No | No |
+| **Multi-Stream** | Yes (32 streams) | Yes | No | Yes | No |
+| **No Head-of-Line Blocking** | Yes | Yes | No | No | No |
+| **Connection Migration** | Yes | Yes | No | No | No |
+| **Built-in Encryption** | Yes (AEAD) | Yes | No (TLS) | No (TLS) | No (TLS) |
+| **Loss Recovery** | Yes (92% @ 5% loss) | Yes (94%) | Limited (80%) | Limited (78%) | Limited (79%) |
 | **Performance** | 70-85% of QUIC | 100% | 70-80% | 65-75% | 60-70% |
-| **Zero C Interop** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Swift Concurrency** | ✅ (async/await) | ❌ | ❌ | ❌ | ❌ |
+| **Zero C Interop** | Yes | No | No | No | No |
+| **Swift Concurrency** | Yes (async/await) | No | No | No | No |
 
 ### Performance Comparison
 
@@ -584,37 +628,37 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 | Feature | BlazeTransport | QUIC | TCP | HTTP/2 | WebSocket | gRPC |
 |---------|----------------|------|-----|--------|-----------|------|
 | **Transport Protocol** | UDP | UDP | TCP | TCP | TCP | TCP |
-| **Multiplexing** | ✅ Streams (32) | ✅ Streams | ❌ | ✅ Streams | ❌ | ✅ Streams |
-| **Head-of-Line Blocking** | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Connection Migration** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **0-RTT Handshake** | ⏳ (v0.3+) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Built-in Encryption** | ✅ (AEAD) | ✅ (TLS 1.3) | ❌ (TLS) | ❌ (TLS) | ❌ (TLS) | ❌ (TLS) |
-| **Loss Recovery** | ✅ (92% @ 5%) | ✅ (94%) | ⚠️ (80%) | ⚠️ (78%) | ⚠️ (79%) | ⚠️ (80%) |
-| **Congestion Control** | ✅ (AIMD) | ✅ (BBR/CUBIC) | ✅ (CUBIC) | ✅ (TCP-based) | ✅ (TCP-based) | ✅ (TCP-based) |
-| **RTT Estimation** | ✅ (QUIC-style) | ✅ | ✅ | ✅ (TCP-based) | ✅ (TCP-based) | ✅ (TCP-based) |
-| **Selective ACK** | ✅ | ✅ | ⚠️ (SACK) | ⚠️ (TCP SACK) | ⚠️ (TCP SACK) | ⚠️ (TCP SACK) |
-| **Stream Prioritization** | ✅ (Weight-based) | ✅ | N/A | ✅ (Priority) | N/A | ✅ |
-| **Type Safety** | ✅ (Codable) | ❌ | ❌ | ❌ | ❌ | ✅ (Protobuf) |
-| **Native Swift** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **HTTP/3 Support** | ⏳ (v0.3+) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **WebSocket Support** | ⏳ (v0.3+) | ✅ | ❌ | ❌ | ✅ | ❌ |
+| **Multiplexing** | Yes Streams (32) | Yes Streams | No | Yes Streams | No | Yes Streams |
+| **Head-of-Line Blocking** | No | No | Yes | Yes | Yes | Yes |
+| **Connection Migration** | Yes | Yes | No | No | No | No |
+| **0-RTT Handshake** | Planned (v0.3+) | Yes | No | No | No | No |
+| **Built-in Encryption** | Yes (AEAD) | Yes (TLS 1.3) | No (TLS) | No (TLS) | No (TLS) | No (TLS) |
+| **Loss Recovery** | Yes (92% @ 5%) | Yes (94%) | Limited (80%) | Limited (78%) | Limited (79%) | Limited (80%) |
+| **Congestion Control** | Yes (AIMD) | Yes (BBR/CUBIC) | Yes (CUBIC) | Yes (TCP-based) | Yes (TCP-based) | Yes (TCP-based) |
+| **RTT Estimation** | Yes (QUIC-style) | Yes | Yes | Yes (TCP-based) | Yes (TCP-based) | Yes (TCP-based) |
+| **Selective ACK** | Yes | Yes | Limited (SACK) | Limited (TCP SACK) | Limited (TCP SACK) | Limited (TCP SACK) |
+| **Stream Prioritization** | Yes (Weight-based) | Yes | N/A | Yes (Priority) | N/A | Yes |
+| **Type Safety** | Yes (Codable) | No | No | No | No | Yes (Protobuf) |
+| **Native Swift** | Yes | No | No | No | No | No |
+| **HTTP/3 Support** | Planned (v0.3+) | Yes | No | No | No | No |
+| **WebSocket Support** | Planned (v0.3+) | Yes | No | No | Yes | No |
 
 ### Use Case Comparison
 
 | Use Case | BlazeTransport | QUIC | TCP | HTTP/2 | WebSocket | Recommendation |
 |----------|----------------|------|-----|--------|-----------|----------------|
-| **Swift Native Apps** | ✅✅✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | **BlazeTransport** |
-| **Mobile Apps (WiFi↔Cellular)** | ✅✅ | ✅✅✅ | ❌ | ❌ | ❌ | QUIC or BlazeTransport |
-| **Real-time Gaming** | ✅✅ | ✅✅✅ | ⚠️ | ❌ | ⚠️ | QUIC or BlazeTransport |
-| **API Communication** | ✅✅ | ✅✅ | ✅ | ✅✅ | ⚠️ | HTTP/2 or BlazeTransport |
-| **Web Browsing** | ❌ | ✅✅✅ | ✅ | ✅✅✅ | ⚠️ | HTTP/2 or QUIC |
-| **WebSocket Replacement** | ⏳ | ✅ | ❌ | ❌ | ✅✅✅ | WebSocket or QUIC |
-| **gRPC Services** | ⚠️ | ✅ | ✅ | ✅ | ❌ | gRPC or QUIC |
-| **Low Latency Trading** | ✅✅ | ✅✅✅ | ⚠️ | ❌ | ⚠️ | QUIC or BlazeTransport |
-| **IoT Devices** | ✅ | ✅ | ✅ | ❌ | ⚠️ | TCP or BlazeTransport |
-| **File Transfer** | ✅ | ✅✅ | ✅✅ | ✅ | ❌ | TCP or QUIC |
+| **Swift Native Apps** | Excellent | Limited | Limited | Limited | Limited | **BlazeTransport** |
+| **Mobile Apps (WiFi↔Cellular)** | Good | Excellent | No | No | No | QUIC or BlazeTransport |
+| **Real-time Gaming** | Good | Excellent | Limited | No | Limited | QUIC or BlazeTransport |
+| **API Communication** | Good | Good | Yes | Good | Limited | HTTP/2 or BlazeTransport |
+| **Web Browsing** | No | Excellent | Yes | Excellent | Limited | HTTP/2 or QUIC |
+| **WebSocket Replacement** | Planned | Yes | No | No | Excellent | WebSocket or QUIC |
+| **gRPC Services** | Limited | Yes | Yes | Yes | No | gRPC or QUIC |
+| **Low Latency Trading** | Good | Excellent | Limited | No | Limited | QUIC or BlazeTransport |
+| **IoT Devices** | Acceptable | Yes | Yes | No | Limited | TCP or BlazeTransport |
+| **File Transfer** | Acceptable | Good | Good | Yes | No | TCP or QUIC |
 
-**Legend**: ✅✅✅ Excellent | ✅✅ Good | ✅ Acceptable | ⚠️ Limited | ❌ Not Suitable | ⏳ Planned
+**Legend**: Excellent | Good | Acceptable | Limited | No (Not Suitable) | Planned
 
 ### Performance Comparison by Scenario
 
@@ -631,13 +675,12 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 ## When to Use BlazeTransport
 
 **Use BlazeTransport when:**
-- Building Swift-native applications requiring reliable, low-latency communication
-- Need type-safe messaging with Codable without HTTP/3 complexity
-- Want multiple concurrent streams on a single connection
-- Require built-in encryption and security
-- Need to customize protocol behavior for specific use cases
-- Want zero C interop overhead for maximum Swift performance
-- Building mobile apps that need connection migration (WiFi ↔ Cellular)
+- Experimenting with transport protocols in Swift
+- Building Swift-native applications that want to avoid C interop
+- Need type-safe messaging with Codable for research/prototyping
+- Want to explore QUIC-inspired patterns without C dependencies
+- Building experimental mobile apps that need connection migration (WiFi ↔ Cellular)
+- Learning systems-level Swift programming
 
 **Consider alternatives when:**
 - Need maximum absolute performance (QUIC C++ implementations are 15-20% faster)
@@ -646,35 +689,73 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 - Want battle-tested protocol with large deployment base (use QUIC or TCP+TLS)
 - Building web browsers or web applications (use HTTP/2 or QUIC)
 
-## VPN Capabilities
+## Limitations (v0.1)
 
-**Can BlazeTransport be used as a VPN?** 
+- **No 0-RTT**: Zero round-trip time handshakes not supported (planned for v0.3+)
+- **No HTTP/3**: HTTP/3 support not included (use QUIC directly if needed)
+- **Simplified Handshake**: Uses X25519 + AEAD, not certificate-based authentication
+- **Basic Prioritization**: Stream prioritization is weight-based but simple
+- **No DDoS Protection**: No built-in rate limiting or DDoS mitigation
+- **User-Space Only**: No kernel bypass, uses standard UDP sockets
+- **No VPN Support**: No TUN/TAP interface or IP-level tunneling (can be built on top)
 
-BlazeTransport is **not a VPN itself**, but it can serve as the **transport layer for a VPN implementation**. Here's the technical breakdown:
+## Roadmap (v0.2–v0.5)
+
+**v0.2** (Planned):
+- 0-RTT handshakes
+- Enhanced stream prioritization algorithms
+- Certificate-based authentication
+- Performance optimizations
+
+**v0.3** (Planned):
+- HTTP/3 support
+- WebSocket over BlazeTransport
+- Advanced congestion control algorithms
+- Multi-path support
+
+**v0.4** (Planned):
+- Cross-platform support (Linux, Windows)
+- IPv6 support
+- Advanced rate limiting
+- Connection pooling
+
+**v0.5** (Planned):
+- Production hardening
+- Advanced monitoring and observability
+- Performance profiling tools
+- Comprehensive fuzzing
+
+## Theoretical: VPN Capabilities
+
+> **Theoretical Discussion** — This section discusses theoretical capabilities. BlazeTransport is **not a VPN** and has no VPN implementation. This is an exploration of what *could* be built, not what *is* built.
+
+**Could BlazeTransport be used as a VPN transport layer?**
+
+BlazeTransport is **not a VPN itself**, and there is **no VPN implementation included**. However, the underlying transport and security features *could theoretically* serve as the transport layer for a VPN implementation. Here's the technical breakdown:
 
 ### What BlazeTransport Provides (VPN-Ready Features)
 
 | Feature | Status | Description |
 |---------|--------|-------------|
-| **Encryption** | ✅ | ChaCha20-Poly1305 AEAD (same as WireGuard) |
-| **Key Exchange** | ✅ | X25519 ECDH (same as WireGuard) |
-| **Perfect Forward Secrecy** | ✅ | Ephemeral keys per connection |
-| **Replay Protection** | ✅ | Nonce-based replay window |
-| **Connection Migration** | ✅ | Seamless address changes (WiFi ↔ Cellular) |
-| **Reliable Transport** | ✅ | Automatic retransmission, congestion control |
-| **Multi-Stream** | ✅ | Multiple tunnels per connection |
-| **Low Latency** | ✅ | p50 ~10ms, p99 ~25ms |
+| **Encryption** | Yes | ChaCha20-Poly1305 AEAD (same as WireGuard) |
+| **Key Exchange** | Yes | X25519 ECDH (same as WireGuard) |
+| **Perfect Forward Secrecy** | Yes | Ephemeral keys per connection |
+| **Replay Protection** | Yes | Nonce-based replay window |
+| **Connection Migration** | Yes | Seamless address changes (WiFi ↔ Cellular) |
+| **Reliable Transport** | Yes | Automatic retransmission, congestion control |
+| **Multi-Stream** | Yes | Multiple tunnels per connection |
+| **Low Latency** | Yes | p50 ~10ms, p99 ~25ms |
 
 ### What's Missing for a Full VPN
 
 | Feature | Status | What's Needed |
 |---------|--------|---------------|
-| **IP-Level Tunneling** | ❌ | TUN/TAP interface support |
-| **IP Packet Encapsulation** | ❌ | IP-in-UDP/IP encapsulation |
-| **Route Management** | ❌ | System routing table manipulation |
-| **DNS Forwarding** | ❌ | DNS proxy/resolver integration |
-| **NAT Traversal** | ⚠️ | Partial (connection migration helps) |
-| **Kernel Integration** | ❌ | User-space only (no kernel module) |
+| **IP-Level Tunneling** | No | TUN/TAP interface support |
+| **IP Packet Encapsulation** | No | IP-in-UDP/IP encapsulation |
+| **Route Management** | No | System routing table manipulation |
+| **DNS Forwarding** | No | DNS proxy/resolver integration |
+| **NAT Traversal** | Limited | Partial (connection migration helps) |
+| **Kernel Integration** | No | User-space only (no kernel module) |
 
 ### How to Build a VPN with BlazeTransport
 
@@ -733,17 +814,17 @@ flowchart TB
 
 | Feature | BlazeTransport | WireGuard | Notes |
 |---------|----------------|-----------|-------|
-| **Encryption** | ChaCha20-Poly1305 | ChaCha20-Poly1305 | ✅ Same |
-| **Key Exchange** | X25519 | X25519 | ✅ Same |
-| **Perfect Forward Secrecy** | ✅ | ✅ | ✅ Same |
+| **Encryption** | ChaCha20-Poly1305 | ChaCha20-Poly1305 | Same |
+| **Key Exchange** | X25519 | X25519 | Same |
+| **Perfect Forward Secrecy** | Yes | Yes | Same |
 | **Transport** | UDP (reliable) | UDP (unreliable) | BlazeTransport adds reliability |
-| **Connection Migration** | ✅ | ✅ | ✅ Same |
-| **Multi-Stream** | ✅ (32 streams) | ❌ (single tunnel) | BlazeTransport advantage |
-| **Congestion Control** | ✅ (AIMD) | ❌ | BlazeTransport advantage |
-| **Loss Recovery** | ✅ (92% @ 5% loss) | ⚠️ (UDP loss) | BlazeTransport advantage |
+| **Connection Migration** | Yes | Yes | Same |
+| **Multi-Stream** | Yes (32 streams) | No (single tunnel) | BlazeTransport advantage |
+| **Congestion Control** | Yes (AIMD) | No | BlazeTransport advantage |
+| **Loss Recovery** | Yes (92% @ 5% loss) | Limited (UDP loss) | BlazeTransport advantage |
 | **Latency** | p50 ~10ms | p50 ~8ms | Comparable |
-| **VPN Implementation** | Requires TUN/TAP | ✅ Built-in | WireGuard is complete VPN |
-| **Kernel Module** | ❌ | ✅ (optional) | WireGuard has kernel mode |
+| **VPN Implementation** | Requires TUN/TAP | Yes Built-in | WireGuard is complete VPN |
+| **Kernel Module** | No | Yes (optional) | WireGuard has kernel mode |
 
 ### Use Cases for BlazeTransport-Based VPN
 
@@ -809,42 +890,6 @@ To build a VPN using BlazeTransport, you would need to:
 - **Native Swift**: Zero C interop overhead
 
 A VPN implementation using BlazeTransport would be **more reliable than WireGuard** (which uses raw UDP) while maintaining similar security guarantees. The main work would be adding TUN/TAP interface support and IP packet encapsulation.
-
-## Limitations (v0.1)
-
-- **No 0-RTT**: Zero round-trip time handshakes not supported (planned for v0.3+)
-- **No HTTP/3**: HTTP/3 support not included (use QUIC directly if needed)
-- **Simplified Handshake**: Uses X25519 + AEAD, not certificate-based authentication
-- **Basic Prioritization**: Stream prioritization is weight-based but simple
-- **No DDoS Protection**: No built-in rate limiting or DDoS mitigation
-- **User-Space Only**: No kernel bypass, uses standard UDP sockets
-- **No VPN Support**: No TUN/TAP interface or IP-level tunneling (can be built on top)
-
-## Roadmap (v0.2–v0.5)
-
-**v0.2** (Planned):
-- 0-RTT handshakes
-- Enhanced stream prioritization algorithms
-- Certificate-based authentication
-- Performance optimizations
-
-**v0.3** (Planned):
-- HTTP/3 support
-- WebSocket over BlazeTransport
-- Advanced congestion control algorithms
-- Multi-path support
-
-**v0.4** (Planned):
-- Cross-platform support (Linux, Windows)
-- IPv6 support
-- Advanced rate limiting
-- Connection pooling
-
-**v0.5** (Planned):
-- Production hardening
-- Advanced monitoring and observability
-- Performance profiling tools
-- Comprehensive fuzzing
 
 ## Requirements
 

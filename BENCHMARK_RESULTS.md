@@ -9,15 +9,17 @@
 
 ## Executive Summary
 
-BlazeTransport achieves **70-85% of QUIC performance** with zero C interop overhead for Swift applications. Key strengths include:
+**Note**: These benchmarks are from experimental testing (v0.1) in controlled loopback conditions. Results may vary in production environments. This is not a production-ready implementation.
 
-- **Encoding/Decoding**: 250K-750K ops/sec (competitive with QUIC C++ implementations)
-- **Latency**: p50 ~10ms, p99 ~25ms (loopback), comparable to QUIC
-- **Loss Recovery**: Maintains 92% throughput at 5% loss (better than TCP's ~80%)
-- **Stream Scaling**: Linear scaling up to 32 concurrent streams
-- **Memory Efficiency**: ~2-4MB per connection (comparable to QUIC)
+BlazeTransport achieves approximately **70-85% of QUIC performance** in these tests, with zero C interop overhead for Swift applications. Observed characteristics include:
 
-**Primary Advantage**: Native Swift implementation eliminates C interop overhead, making it ideal for Swift-native applications requiring QUIC-like performance without external dependencies.
+- **Encoding/Decoding**: 250K-750K ops/sec (measured in loopback conditions)
+- **Latency**: p50 ~10ms, p99 ~25ms (loopback), comparable to QUIC in these tests
+- **Loss Recovery**: Maintains ~92% throughput at 5% simulated loss (TCP typically ~80% in similar conditions)
+- **Stream Scaling**: Linear scaling observed up to 32 concurrent streams in testing
+- **Memory Efficiency**: ~2-4MB per connection (similar to QUIC in these measurements)
+
+**Experimental Context**: This is a research implementation exploring Swift-native transport patterns. The native Swift implementation eliminates C interop overhead, which may be beneficial for Swift-native applications, but this comes with performance trade-offs compared to optimized C++ implementations.
 
 ---
 
@@ -434,32 +436,32 @@ BlazeTransport achieves **70-85% of QUIC performance** with zero C interop overh
 ### 10.2 Strengths vs. Competitors
 
 **vs. QUIC (C++)**:
-- ✅ Native Swift API (no C interop)
-- ✅ Type-safe messaging (Codable)
-- ✅ Simplified deployment
-- ❌ 15-20% lower throughput
-- ❌ No BBR congestion control (yet)
+- Native Swift API (no C interop)
+- Type-safe messaging (Codable)
+- Simplified deployment
+- 15-20% lower throughput
+- No BBR congestion control (yet)
 
 **vs. TCP**:
-- ✅ 15-20% better throughput under loss
-- ✅ No head-of-line blocking
-- ✅ Connection migration
-- ✅ Lower latency (p99)
-- ❌ More memory per connection
+- 15-20% better throughput under loss
+- No head-of-line blocking
+- Connection migration
+- Lower latency (p99)
+- More memory per connection
 
 **vs. HTTP/2**:
-- ✅ 20-30% better throughput (multi-stream)
-- ✅ Lower latency (no head-of-line blocking)
-- ✅ Connection migration
-- ✅ Type-safe messaging
-- ❌ No HTTP/3 support (yet)
+- 20-30% better throughput (multi-stream)
+- Lower latency (no head-of-line blocking)
+- Connection migration
+- Type-safe messaging
+- No HTTP/3 support (yet)
 
 **vs. WebSocket**:
-- ✅ Reliability (automatic retransmission)
-- ✅ Congestion control
-- ✅ Multi-stream multiplexing
-- ✅ Lower latency
-- ❌ More complex API
+- Reliability (automatic retransmission)
+- Congestion control
+- Multi-stream multiplexing
+- Lower latency
+- More complex API
 
 ### 10.3 Use Case Recommendations
 

@@ -50,7 +50,7 @@ Use this checklist when preparing a new release of BlazeTransport.
 
 ## Version History
 
-- **v0.1.0**: Initial production release
+- **v0.1.0**: Initial experimental release
   - Complete transport protocol implementation
   - Multi-stream support
   - Security hardening
