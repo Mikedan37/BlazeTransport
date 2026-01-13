@@ -31,11 +31,11 @@ let package = Package(
     ],
     dependencies: [
         .package(
-            url: "git@github.com:Mikedan37/BlazeBinary.git",
+            url: "https://github.com/Mikedan37/BlazeBinary.git",
             branch: "main"
         ),
         .package(
-            url: "git@github.com:Mikedan37/BlazeFSM.git",
+            url: "https://github.com/Mikedan37/BlazeFSM.git",
             revision: "58b292a27928d211eef12090cafcbf12b31d69c6"
         ),
     ],
