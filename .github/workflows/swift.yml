@@ -37,9 +37,7 @@ jobs:
     
     - name: Configure Git for private repositories
       run: |
-        git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        git config --global url."https://${{ github.token }}@github.com/".insteadOf "https://github.com/"
     
     - name: Select Xcode
       if: matrix.platform.xcode
