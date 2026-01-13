@@ -35,6 +35,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Configure Git for private repositories
+      run: |
+        git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
     - name: Select Xcode
       if: matrix.platform.xcode
       run: sudo xcode-select -s /Applications/${{ matrix.platform.xcode }}
