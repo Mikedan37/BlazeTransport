@@ -540,7 +540,7 @@ flowchart TD
     GrowLin --> Check
     
     OnAck --> OnLoss[onLoss: Packet loss detected]
-    OnLoss --> Reduce[cwnd = cwnd / 2<br/>ssthresh = max(cwnd/2, 1460)]
+    OnLoss --> Reduce[cwnd = cwnd / 2<br/>ssthresh = cwnd/2 min 1460]
     Reduce --> Check
     
     Check --> WindowCheck{cwnd > 0?}
