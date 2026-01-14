@@ -14,8 +14,6 @@ BlazeTransport is a QUIC-inspired, Swift-native transport protocol with multi-st
 
 **This project explores** how modern transport protocols (QUIC, HTTP/2) can be implemented natively in Swift with zero C interop overhead, while maintaining type safety and leveraging Swift concurrency.
 
-**This project is not** a production-ready replacement for QUIC, TCP, or HTTP/2. It's a research implementation that demonstrates systems-level Swift capabilities.
-
 ## Quick Start
 
 ### Installation
@@ -352,15 +350,7 @@ See [Docs/Internals.md](Docs/Internals.md) for detailed implementation flows inc
 
 BlazeTransport explores what's possible when implementing QUIC-inspired transport patterns **entirely in Swift** with zero C interop overhead. It demonstrates that Swift can handle systems-level work—congestion control, reliability, crypto, state machines—while maintaining type safety and leveraging modern Swift concurrency.
 
-**This is not a production replacement for QUIC or TCP.** It's a research implementation that shows:
-- How transport protocols can be built natively in Swift
-- What performance characteristics emerge without C interop overhead
-- How type safety can be preserved at the transport layer
-- What trade-offs exist between native Swift and battle-tested C implementations
-
 ### Where BlazeTransport Overlaps with QUIC Semantics
-
-**Note**: This comparison shows where BlazeTransport intentionally overlaps with QUIC design patterns, optimized for Swift-native, experimental use cases. This is not a production QUIC replacement.
 
 | Feature | BlazeTransport | QUIC (C++) | TCP | HTTP/2 | WebSocket |
 |---------|---------------|------------|-----|--------|-----------|
@@ -416,28 +406,9 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 
 ## Why Not Just Use QUIC?
 
-**Context**: This comparison shows where BlazeTransport intentionally overlaps with QUIC semantics, optimized for Swift-only, local/agent-centric use cases. This is experimental research, not a production protocol replacement.
+BlazeTransport is not intended to replace production QUIC stacks. It exists to explore Swift-native ergonomics, safety, and systems tradeoffs that are difficult to evaluate when relying on C-based implementations.
 
-### Feature Comparison
-
-| Feature | BlazeTransport | QUIC |
-|---------|----------------|------|
-| **Transport Protocol** | UDP | UDP |
-| **Multiplexing** | Yes (32 streams) | Yes |
-| **Head-of-Line Blocking** | No | No |
-| **Connection Migration** | Yes | Yes |
-| **0-RTT Handshake** | Planned (v0.3+) | Yes |
-| **Built-in Encryption** | Yes (AEAD) | Yes (TLS 1.3) |
-| **Loss Recovery** | Yes (~92% @ 5% loss, experimental) | Yes (~94%) |
-| **Congestion Control** | Yes (AIMD) | Yes (BBR/CUBIC) |
-| **RTT Estimation** | Yes (QUIC-style) | Yes |
-| **Selective ACK** | Yes | Yes |
-| **Stream Prioritization** | Yes (Weight-based) | Yes |
-| **Type Safety** | Yes (Codable) | No |
-| **Native Swift** | Yes | No |
-| **HTTP/3 Support** | Planned (v0.3+) | Yes |
-
-See [Docs/QUICComparison.md](Docs/QUICComparison.md) for detailed protocol comparison including TCP, HTTP/2, WebSocket, and gRPC.
+See [Docs/QUICComparison.md](Docs/QUICComparison.md) for detailed protocol comparison.
 
 
 ## When to Use BlazeTransport
@@ -445,9 +416,9 @@ See [Docs/QUICComparison.md](Docs/QUICComparison.md) for detailed protocol compa
 **Use BlazeTransport when:**
 - Experimenting with transport protocols in Swift
 - Building Swift-native applications that want to avoid C interop
-- Need type-safe messaging with Codable for research/prototyping
+- Need type-safe messaging with Codable
 - Want to explore QUIC-inspired patterns without C dependencies
-- Building experimental mobile apps that need connection migration (WiFi ↔ Cellular)
+- Building mobile apps that need connection migration (WiFi ↔ Cellular)
 - Learning systems-level Swift programming
 
 **Consider alternatives when:**
@@ -467,201 +438,16 @@ See [Docs/QUICComparison.md](Docs/QUICComparison.md) for detailed protocol compa
 - **User-Space Only**: No kernel bypass, uses standard UDP sockets
 - **No VPN Support**: No TUN/TAP interface or IP-level tunneling (can be built on top)
 
-## Roadmap (v0.2–v0.5)
+## Roadmap
 
-**v0.2** (Planned):
-- 0-RTT handshakes
-- Enhanced stream prioritization algorithms
-- Certificate-based authentication
-- Performance optimizations
+**v0.2**: 0-RTT handshakes, certificate-based authentication  
+**v0.3**: HTTP/3 support, WebSocket over BlazeTransport
 
-**v0.3** (Planned):
-- HTTP/3 support
-- WebSocket over BlazeTransport
-- Advanced congestion control algorithms
-- Multi-path support
-
-**v0.4** (Planned):
-- Cross-platform support (Linux, Windows)
-- IPv6 support
-- Advanced rate limiting
-- Connection pooling
-
-**v0.5** (Planned):
-- Production hardening
-- Advanced monitoring and observability
-- Performance profiling tools
-- Comprehensive fuzzing
-
-## Theoretical: VPN Capabilities
-
-> **Theoretical Discussion** — This section discusses theoretical capabilities. BlazeTransport is **not a VPN** and has no VPN implementation. This is an exploration of what *could* be built, not what *is* built.
-
-**Could BlazeTransport be used as a VPN transport layer?**
-
-BlazeTransport is **not a VPN itself**, and there is **no VPN implementation included**. However, the underlying transport and security features *could theoretically* serve as the transport layer for a VPN implementation. Here's the technical breakdown:
-
-### What BlazeTransport Provides (VPN-Ready Features)
-
-| Feature | Status | Description |
-|---------|--------|-------------|
-| **Encryption** | Yes | ChaCha20-Poly1305 AEAD (same as WireGuard) |
-| **Key Exchange** | Yes | X25519 ECDH (same as WireGuard) |
-| **Perfect Forward Secrecy** | Yes | Ephemeral keys per connection |
-| **Replay Protection** | Yes | Nonce-based replay window |
-| **Connection Migration** | Yes | Seamless address changes (WiFi ↔ Cellular) |
-| **Reliable Transport** | Yes | Automatic retransmission, congestion control |
-| **Multi-Stream** | Yes | Multiple tunnels per connection |
-| **Low Latency** | Yes | p50 ~10ms, p99 ~25ms |
-
-### What's Missing for a Full VPN
-
-| Feature | Status | What's Needed |
-|---------|--------|---------------|
-| **IP-Level Tunneling** | No | TUN/TAP interface support |
-| **IP Packet Encapsulation** | No | IP-in-UDP/IP encapsulation |
-| **Route Management** | No | System routing table manipulation |
-| **DNS Forwarding** | No | DNS proxy/resolver integration |
-| **NAT Traversal** | Limited | Partial (connection migration helps) |
-| **Kernel Integration** | No | User-space only (no kernel module) |
-
-### How to Build a VPN with BlazeTransport
-
-BlazeTransport could be used as the **secure transport layer** for a VPN, similar to how WireGuard uses UDP. Here's the architecture:
-
-```mermaid
-flowchart TB
-    subgraph App["Application Layer"]
-        App1[App 1]
-        App2[App 2]
-        AppN[App N]
-    end
-    
-    subgraph VPN["VPN Layer (To Be Built)"]
-        TUN[TUN/TAP Interface]
-        IPEncaps[IP Packet Encapsulation]
-        RouteMgr[Route Manager]
-        DNSProxy[DNS Proxy]
-    end
-    
-    subgraph Transport["BlazeTransport Layer"]
-        BlazeConn[BlazeConnection]
-        BlazeStream[BlazeStream]
-        Encryption[ChaCha20-Poly1305]
-        KeyExchange[X25519]
-    end
-    
-    subgraph Network["Network"]
-        UDP[UDP Socket]
-        Internet[Internet]
-    end
-    
-    App1 --> TUN
-    App2 --> TUN
-    AppN --> TUN
-    TUN --> IPEncaps
-    IPEncaps --> RouteMgr
-    RouteMgr --> DNSProxy
-    DNSProxy --> BlazeConn
-    BlazeConn --> BlazeStream
-    BlazeStream --> Encryption
-    Encryption --> KeyExchange
-    KeyExchange --> UDP
-    UDP --> Internet
-    
-    style TUN fill:#2a2a2a,stroke:#ff6b6b,stroke-width:2px
-    style IPEncaps fill:#2a2a2a,stroke:#ff6b6b,stroke-width:2px
-    style RouteMgr fill:#2a2a2a,stroke:#ff6b6b,stroke-width:2px
-    style DNSProxy fill:#2a2a2a,stroke:#ff6b6b,stroke-width:2px
-    style BlazeConn fill:#363636,stroke:#51cf66,stroke-width:2px
-    style Encryption fill:#363636,stroke:#51cf66,stroke-width:2px
-    style KeyExchange fill:#363636,stroke:#51cf66,stroke-width:2px
-```
-
-### Comparison: BlazeTransport vs. WireGuard (VPN Protocol)
-
-| Feature | BlazeTransport | WireGuard | Notes |
-|---------|----------------|-----------|-------|
-| **Encryption** | ChaCha20-Poly1305 | ChaCha20-Poly1305 | Same |
-| **Key Exchange** | X25519 | X25519 | Same |
-| **Perfect Forward Secrecy** | Yes | Yes | Same |
-| **Transport** | UDP (reliable) | UDP (unreliable) | BlazeTransport adds reliability |
-| **Connection Migration** | Yes | Yes | Same |
-| **Multi-Stream** | Yes (32 streams) | No (single tunnel) | BlazeTransport advantage |
-| **Congestion Control** | Yes (AIMD) | No | BlazeTransport advantage |
-| **Loss Recovery** | Yes (92% @ 5% loss) | Limited (UDP loss) | BlazeTransport advantage |
-| **Latency** | p50 ~10ms | p50 ~8ms | Comparable |
-| **VPN Implementation** | Requires TUN/TAP | Yes Built-in | WireGuard is complete VPN |
-| **Kernel Module** | No | Yes (optional) | WireGuard has kernel mode |
-
-### Use Cases for BlazeTransport-Based VPN
-
-**Suitable for:**
-- **Application-Level VPN**: Secure tunneling for specific applications (not system-wide)
-- **Mobile VPN**: Connection migration makes it ideal for mobile devices
-- **Multi-Stream VPN**: Multiple secure tunnels over a single connection
-- **Swift-Native VPN**: VPN implementation entirely in Swift (no C interop)
-
-**Not suitable for:**
-- **System-Wide VPN**: Requires TUN/TAP interface (not included)
-- **Kernel-Level VPN**: No kernel module support
-- **Production VPN Service**: Would need additional VPN infrastructure
-
-### Implementation Path
-
-To build a VPN using BlazeTransport, you would need to:
-
-1. **Add TUN/TAP Interface Support**:
-   ```swift
-   // Create TUN interface
-   let tunFD = createTUNInterface(name: "blaze0")
-   // Read IP packets from TUN
-   // Encapsulate in BlazeTransport frames
-   ```
-
-2. **Implement IP Packet Encapsulation**:
-   ```swift
-   // Capture IP packet from TUN
-   let ipPacket = readFromTUN()
-   // Encapsulate in BlazeTransport frame
-   let frame = BlazeFrame(type: .data, payload: ipPacket)
-   // Send over BlazeTransport stream
-   ```
-
-3. **Add Route Management**:
-   ```swift
-   // Add routes for VPN subnet
-   addRoute(subnet: "10.0.0.0/24", interface: "blaze0")
-   // Update DNS servers
-   updateDNSServers(servers: ["1.1.1.1"])
-   ```
-
-4. **Integrate with BlazeTransport**:
-   ```swift
-   // Use BlazeTransport as secure transport
-   let connection = try await BlazeTransport.connect(
-       host: vpnServer,
-       port: 51820,
-       security: .blazeDefault
-   )
-   let tunnelStream = try await connection.openStream()
-   // Send encapsulated IP packets
-   ```
-
-### Conclusion
-
-**BlazeTransport is not a VPN**, but it provides **all the security and transport features needed** to build a VPN. It's similar to WireGuard in terms of cryptography (ChaCha20-Poly1305 + X25519), but adds:
-
-- **Reliability**: Automatic retransmission and loss recovery
-- **Congestion Control**: AIMD algorithm for fair bandwidth sharing
-- **Multi-Stream**: Multiple tunnels per connection
-- **Native Swift**: Zero C interop overhead
-
-A VPN implementation using BlazeTransport would be **more reliable than WireGuard** (which uses raw UDP) while maintaining similar security guarantees. The main work would be adding TUN/TAP interface support and IP packet encapsulation.
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history and planned features.
 
 ## Requirements
 
-- Swift 6.0+
+- Swift 5.9+
 - macOS 14.0+ / iOS 17.0+
 - BlazeBinary (for encoding/encryption)
 - BlazeFSM (for state machines)
