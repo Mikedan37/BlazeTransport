@@ -577,7 +577,9 @@ BlazeTransport explores what's possible when implementing QUIC-inspired transpor
 - How type safety can be preserved at the transport layer
 - What trade-offs exist between native Swift and battle-tested C implementations
 
-### Key Advantages
+### Where BlazeTransport Overlaps with QUIC Semantics
+
+**Note**: This comparison shows where BlazeTransport intentionally overlaps with QUIC design patterns, optimized for Swift-native, experimental use cases. This is not a production QUIC replacement.
 
 | Feature | BlazeTransport | QUIC (C++) | TCP | HTTP/2 | WebSocket |
 |---------|---------------|------------|-----|--------|-----------|
@@ -592,7 +594,9 @@ BlazeTransport explores what's possible when implementing QUIC-inspired transpor
 | **Zero C Interop** | Yes | No | No | No | No |
 | **Swift Concurrency** | Yes (async/await) | No | No | No | No |
 
-### Performance Comparison
+### Experimental Performance Measurements
+
+**Note**: These are experimental measurements from controlled loopback conditions (v0.1). Results are not universal or standardized. BlazeTransport is slower than QUIC, which is expected for a Swift-native research implementation.
 
 | Metric | BlazeTransport | QUIC | TCP | HTTP/2 | WebSocket |
 |--------|----------------|------|-----|--------|-----------|
@@ -629,7 +633,9 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 - [Benchmarks.md](Docs/Benchmarks.md) - Benchmark suite and results
 - [Internals.md](Docs/Internals.md) - Internal implementation details
 
-## Detailed Protocol Comparison
+## Protocol Comparison: Swift-Native vs. Standard Protocols
+
+**Context**: This comparison shows where BlazeTransport intentionally overlaps with QUIC semantics, optimized for Swift-only, local/agent-centric use cases. This is experimental research, not a production protocol replacement.
 
 ### Feature Comparison Matrix
 
@@ -668,7 +674,9 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 
 **Legend**: Excellent | Good | Acceptable | Limited | No (Not Suitable) | Planned
 
-### Performance Comparison by Scenario
+### Experimental Performance by Scenario
+
+**Note**: These are experimental measurements from controlled test conditions. BlazeTransport is slower than QUIC (70-85%), which is expected for a Swift-native implementation. Numbers are not universal benchmarks.
 
 | Scenario | BlazeTransport | QUIC | TCP | HTTP/2 | Winner |
 |----------|----------------|------|-----|--------|--------|
