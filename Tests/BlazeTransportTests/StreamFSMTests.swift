@@ -13,7 +13,7 @@ final class StreamFSMTests: XCTestCase {
     
     func testStreamFSMOpenReceivesFrame() async throws {
         var machine = makeStreamStateMachine()
-        machine.process(.appSend) // idle → open
+        _ = machine.process(.appSend) // idle → open
         
         let effects = machine.process(.frameReceived)
         XCTAssertTrue(effects.contains { if case .deliverToApp = $0 { return true }; return false })
@@ -21,7 +21,7 @@ final class StreamFSMTests: XCTestCase {
     
     func testStreamFSMAppClose() async throws {
         var machine = makeStreamStateMachine()
-        machine.process(.appSend) // idle → open
+        _ = machine.process(.appSend) // idle → open
         
         let effects = machine.process(.appClose)
         XCTAssertTrue(effects.contains { if case .emitFrame = $0 { return true }; return false })
@@ -29,7 +29,7 @@ final class StreamFSMTests: XCTestCase {
     
     func testStreamFSMReset() async throws {
         var machine = makeStreamStateMachine()
-        machine.process(.appSend) // idle → open
+        _ = machine.process(.appSend) // idle → open
         
         let effects = machine.process(.resetReceived)
         XCTAssertTrue(effects.contains { if case .markClosed = $0 { return true }; return false })

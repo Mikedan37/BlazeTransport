@@ -14,7 +14,7 @@ final class ConnectionFSMTests: XCTestCase {
     
     func testConnectionFSMTimeout() async throws {
         var machine = makeConnectionStateMachine()
-        machine.process(.appOpenRequested) // Move to synSent
+        _ = machine.process(.appOpenRequested) // Move to synSent
         
         let effects = machine.process(.timeout("handshake"))
         XCTAssertTrue(effects.contains { if case .markClosed = $0 { return true }; return false })
@@ -22,8 +22,8 @@ final class ConnectionFSMTests: XCTestCase {
     
     func testConnectionFSMHandshakeSuccess() async throws {
         var machine = makeConnectionStateMachine()
-        machine.process(.appOpenRequested) // idle → synSent
-        machine.process(.packetReceived) // synSent → handshake
+        _ = machine.process(.appOpenRequested) // idle → synSent
+        _ = machine.process(.packetReceived) // synSent → handshake
         
         let effects = machine.process(.handshakeSucceeded)
         XCTAssertTrue(effects.contains { if case .markActive = $0 { return true }; return false })
@@ -31,8 +31,8 @@ final class ConnectionFSMTests: XCTestCase {
     
     func testConnectionFSMHandshakeFailure() async throws {
         var machine = makeConnectionStateMachine()
-        machine.process(.appOpenRequested) // idle → synSent
-        machine.process(.packetReceived) // synSent → handshake
+        _ = machine.process(.appOpenRequested) // idle → synSent
+        _ = machine.process(.packetReceived) // synSent → handshake
         
         let effects = machine.process(.handshakeFailed)
         XCTAssertTrue(effects.contains { if case .markClosed = $0 { return true }; return false })

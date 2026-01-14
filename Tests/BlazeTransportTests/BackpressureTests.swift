@@ -24,7 +24,7 @@ final class BackpressureTests: XCTestCase {
                 congestion.onLoss()
                 losses += 1
             } else {
-                congestion.onAck(bytesAcked: chunkSize)
+                congestion.onAck(bytesAcked: chunkSize, rtt: nil)
             }
         }
         
@@ -50,7 +50,7 @@ final class BackpressureTests: XCTestCase {
         
         // Simulate recovery with successful ACKs
         for _ in 0..<20 {
-            congestion.onAck(bytesAcked: 1460)
+            congestion.onAck(bytesAcked: 1460, rtt: nil)
         }
         
         // Window should recover (grow back)
@@ -72,10 +72,10 @@ final class BackpressureTests: XCTestCase {
             // 10% loss rate
             if Double.random(in: 0...1) < 0.10 {
                 congestion.onLoss()
-            } else {
-                reliability.noteAckReceived(for: packetNumber)
-                congestion.onAck(bytesAcked: 1460)
-            }
+        } else {
+            reliability.noteAckReceived(for: packetNumber)
+            congestion.onAck(bytesAcked: 1460, rtt: nil)
+        }
         }
         
         // Should still be in valid state

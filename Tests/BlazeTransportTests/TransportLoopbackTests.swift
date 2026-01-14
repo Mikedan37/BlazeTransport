@@ -50,7 +50,7 @@ final class TransportLoopbackTests: XCTestCase {
         }
         
         for i in 0..<1000 {
-            let frame = Frame(sequence: i, data: "Frame \(i)")
+            _ = Frame(sequence: i, data: "Frame \(i)")
             // Note: Actual send will fail without PacketEngine implementation
             // but API structure is validated
             // try await stream.send(frame)

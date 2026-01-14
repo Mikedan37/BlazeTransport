@@ -29,7 +29,7 @@ final class PacketLossRecoveryTests: XCTestCase {
                 // Packet arrives successfully
                 reliability.noteAckReceived(for: packetNumber)
                 packetsAcked += 1
-                congestion.onAck(bytesAcked: 1024)
+                congestion.onAck(bytesAcked: 1024, rtt: nil)
             } else {
                 // Packet lost - simulate timeout and retransmission
                 retransmissions += 1
@@ -57,7 +57,7 @@ final class PacketLossRecoveryTests: XCTestCase {
         
         // Simulate successful ACKs (slow start)
         for _ in 0..<10 {
-            congestion.onAck(bytesAcked: 1460)
+            congestion.onAck(bytesAcked: 1460, rtt: nil)
         }
         
         // Window should grow during slow start

@@ -5,7 +5,7 @@ import XCTest
 final class ConnectionMigrationTests: XCTestCase {
     
     func testConnectionMigrationTracking() async throws {
-        var migration = ConnectionMigration(host: "127.0.0.1", port: 9999)
+        let migration = ConnectionMigration(host: "127.0.0.1", port: 9999)
         
         XCTAssertFalse(migration.hasAddressChanged(host: "127.0.0.1", port: 9999))
         XCTAssertTrue(migration.hasAddressChanged(host: "127.0.0.1", port: 10000))
@@ -27,7 +27,7 @@ final class ConnectionMigrationTests: XCTestCase {
         XCTAssertTrue(migration.validateAddress(host: "127.0.0.1", port: 9999))
         
         // Migrate to new address
-        migration.migrate(to: "192.168.1.1", port: 10000)
+        _ = migration.migrate(to: "192.168.1.1", port: 10000)
         
         // Both original and new address should be valid
         XCTAssertTrue(migration.validateAddress(host: "127.0.0.1", port: 9999))
