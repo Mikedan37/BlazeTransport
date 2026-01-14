@@ -590,7 +590,7 @@ BlazeTransport explores what's possible when implementing QUIC-inspired transpor
 | **Connection Migration** | Yes | Yes | No | No | No |
 | **Built-in Encryption** | Yes (AEAD) | Yes | No (TLS) | No (TLS) | No (TLS) |
 | **Loss Recovery** | Yes (~92% @ 5% loss, experimental) | Yes (94%) | Limited (~80%) | Limited (~78%) | Limited (~79%) |
-| **Performance** | 70-85% of QUIC | 100% | 70-80% | 65-75% | 60-70% |
+| **Performance** | ~70–85% of QUIC (controlled benchmarks) | 100% | 70-80% | 65-75% | 60-70% |
 | **Zero C Interop** | Yes | No | No | No | No |
 | **Swift Concurrency** | Yes (async/await) | No | No | No | No |
 
