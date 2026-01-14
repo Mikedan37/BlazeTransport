@@ -640,39 +640,23 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 ### Feature Comparison
 
 | Feature | BlazeTransport | QUIC |
-|---------|----------------|------|-----|--------|-----------|------|
-| **Transport Protocol** | UDP | UDP | TCP | TCP | TCP | TCP |
-| **Multiplexing** | Yes Streams (32) | Yes Streams | No | Yes Streams | No | Yes Streams |
-| **Head-of-Line Blocking** | No | No | Yes | Yes | Yes | Yes |
-| **Connection Migration** | Yes | Yes | No | No | No | No |
-| **0-RTT Handshake** | Planned (v0.3+) | Yes | No | No | No | No |
-| **Built-in Encryption** | Yes (AEAD) | Yes (TLS 1.3) | No (TLS) | No (TLS) | No (TLS) | No (TLS) |
-| **Loss Recovery** | Yes (92% @ 5%) | Yes (94%) | Limited (80%) | Limited (78%) | Limited (79%) | Limited (80%) |
-| **Congestion Control** | Yes (AIMD) | Yes (BBR/CUBIC) | Yes (CUBIC) | Yes (TCP-based) | Yes (TCP-based) | Yes (TCP-based) |
-| **RTT Estimation** | Yes (QUIC-style) | Yes | Yes | Yes (TCP-based) | Yes (TCP-based) | Yes (TCP-based) |
-| **Selective ACK** | Yes | Yes | Limited (SACK) | Limited (TCP SACK) | Limited (TCP SACK) | Limited (TCP SACK) |
-| **Stream Prioritization** | Yes (Weight-based) | Yes | N/A | Yes (Priority) | N/A | Yes |
-| **Type Safety** | Yes (Codable) | No | No | No | No | Yes (Protobuf) |
-| **Native Swift** | Yes | No | No | No | No | No |
-| **HTTP/3 Support** | Planned (v0.3+) | Yes | No | No | No | No |
-| **WebSocket Support** | Planned (v0.3+) | Yes | No | No | Yes | No |
+|---------|----------------|------|
+| **Transport Protocol** | UDP | UDP |
+| **Multiplexing** | Yes (32 streams) | Yes |
+| **Head-of-Line Blocking** | No | No |
+| **Connection Migration** | Yes | Yes |
+| **0-RTT Handshake** | Planned (v0.3+) | Yes |
+| **Built-in Encryption** | Yes (AEAD) | Yes (TLS 1.3) |
+| **Loss Recovery** | Yes (~92% @ 5% loss, experimental) | Yes (~94%) |
+| **Congestion Control** | Yes (AIMD) | Yes (BBR/CUBIC) |
+| **RTT Estimation** | Yes (QUIC-style) | Yes |
+| **Selective ACK** | Yes | Yes |
+| **Stream Prioritization** | Yes (Weight-based) | Yes |
+| **Type Safety** | Yes (Codable) | No |
+| **Native Swift** | Yes | No |
+| **HTTP/3 Support** | Planned (v0.3+) | Yes |
 
-### Use Case Comparison
-
-| Use Case | BlazeTransport | QUIC | TCP | HTTP/2 | WebSocket | Recommendation |
-|----------|----------------|------|-----|--------|-----------|----------------|
-| **Swift Native Apps** | Excellent | Limited | Limited | Limited | Limited | **BlazeTransport** |
-| **Mobile Apps (WiFi↔Cellular)** | Good | Excellent | No | No | No | QUIC or BlazeTransport |
-| **Real-time Gaming** | Good | Excellent | Limited | No | Limited | QUIC or BlazeTransport |
-| **API Communication** | Good | Good | Yes | Good | Limited | HTTP/2 or BlazeTransport |
-| **Web Browsing** | No | Excellent | Yes | Excellent | Limited | HTTP/2 or QUIC |
-| **WebSocket Replacement** | Planned | Yes | No | No | Excellent | WebSocket or QUIC |
-| **gRPC Services** | Limited | Yes | Yes | Yes | No | gRPC or QUIC |
-| **Low Latency Trading** | Good | Excellent | Limited | No | Limited | QUIC or BlazeTransport |
-| **IoT Devices** | Acceptable | Yes | Yes | No | Limited | TCP or BlazeTransport |
-| **File Transfer** | Acceptable | Good | Good | Yes | No | TCP or QUIC |
-
-**Legend**: Excellent | Good | Acceptable | Limited | No (Not Suitable) | Planned
+See [Docs/QUICComparison.md](Docs/QUICComparison.md) for detailed protocol comparison including TCP, HTTP/2, WebSocket, and gRPC.
 
 
 ## When to Use BlazeTransport
