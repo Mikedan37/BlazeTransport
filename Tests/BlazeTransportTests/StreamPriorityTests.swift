@@ -1,67 +1,65 @@
-import Testing
+import XCTest
 @testable import BlazeTransport
 
 /// Tests for stream prioritization functionality.
-@Test("Stream Priority: Higher weight streams are selected first")
-func testStreamPriorityOrdering() async throws {
-    var queue = StreamPriorityQueue()
+final class StreamPriorityTests: XCTestCase {
     
-    queue.add(streamID: 1, weight: 50)
-    queue.add(streamID: 2, weight: 100)
-    queue.add(streamID: 3, weight: 200)
+    func testStreamPriorityOrdering() async throws {
+        var queue = StreamPriorityQueue()
+        
+        queue.add(streamID: 1, weight: 50)
+        queue.add(streamID: 2, weight: 100)
+        queue.add(streamID: 3, weight: 200)
+        
+        // Should return highest weight first
+        let first = queue.next()
+        XCTAssertEqual(first, 3)  // Weight 200
+        
+        let second = queue.next()
+        XCTAssertEqual(second, 2)  // Weight 100
+        
+        let third = queue.next()
+        XCTAssertEqual(third, 1)  // Weight 50
+    }
     
-    // Should return highest weight first
-    let first = queue.next()
-    #expect(first == 3)  // Weight 200
+    func testStreamPriorityUpdate() async throws {
+        var queue = StreamPriorityQueue()
+        
+        queue.add(streamID: 1, weight: 50)
+        queue.add(streamID: 2, weight: 100)
+        
+        // Update stream 1 to higher priority
+        queue.add(streamID: 1, weight: 150)
+        
+        let first = queue.next()
+        XCTAssertEqual(first, 1)  // Now highest priority
+    }
     
-    let second = queue.next()
-    #expect(second == 2)  // Weight 100
+    func testStreamPriorityRemove() async throws {
+        var queue = StreamPriorityQueue()
+        
+        queue.add(streamID: 1, weight: 100)
+        queue.add(streamID: 2, weight: 200)
+        queue.add(streamID: 3, weight: 150)
+        
+        queue.remove(streamID: 2)
+        
+        let first = queue.next()
+        XCTAssertEqual(first, 3)  // Should be next highest after removing 2
+        
+        let second = queue.next()
+        XCTAssertEqual(second, 1)
+    }
     
-    let third = queue.next()
-    #expect(third == 1)  // Weight 50
+    func testDefaultStreamWeights() async throws {
+        XCTAssertEqual(StreamPriority.defaultWeight, 100)
+        XCTAssertEqual(StreamPriority.highPriorityWeight, 200)
+        XCTAssertEqual(StreamPriority.lowPriorityWeight, 50)
+        XCTAssertEqual(StreamPriority.controlStreamWeight, 300)
+        
+        // Control stream should have highest priority
+        XCTAssertTrue(StreamPriority.controlStreamWeight > StreamPriority.highPriorityWeight)
+        XCTAssertTrue(StreamPriority.highPriorityWeight > StreamPriority.defaultWeight)
+        XCTAssertTrue(StreamPriority.defaultWeight > StreamPriority.lowPriorityWeight)
+    }
 }
-
-@Test("Stream Priority: Updating weight changes priority")
-func testStreamPriorityUpdate() async throws {
-    var queue = StreamPriorityQueue()
-    
-    queue.add(streamID: 1, weight: 50)
-    queue.add(streamID: 2, weight: 100)
-    
-    // Update stream 1 to higher priority
-    queue.add(streamID: 1, weight: 150)
-    
-    let first = queue.next()
-    #expect(first == 1)  // Now highest priority
-}
-
-@Test("Stream Priority: Removing stream removes from queue")
-func testStreamPriorityRemove() async throws {
-    var queue = StreamPriorityQueue()
-    
-    queue.add(streamID: 1, weight: 100)
-    queue.add(streamID: 2, weight: 200)
-    queue.add(streamID: 3, weight: 150)
-    
-    queue.remove(streamID: 2)
-    
-    let first = queue.next()
-    #expect(first == 3)  // Should be next highest after removing 2
-    
-    let second = queue.next()
-    #expect(second == 1)
-}
-
-@Test("Stream Priority: Default weights are applied correctly")
-func testDefaultStreamWeights() async throws {
-    #expect(StreamPriority.defaultWeight == 100)
-    #expect(StreamPriority.highPriorityWeight == 200)
-    #expect(StreamPriority.lowPriorityWeight == 50)
-    #expect(StreamPriority.controlStreamWeight == 300)
-    
-    // Control stream should have highest priority
-    #expect(StreamPriority.controlStreamWeight > StreamPriority.highPriorityWeight)
-    #expect(StreamPriority.highPriorityWeight > StreamPriority.defaultWeight)
-    #expect(StreamPriority.defaultWeight > StreamPriority.lowPriorityWeight)
-}
-
