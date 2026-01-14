@@ -59,10 +59,7 @@ jobs:
     - name: Build (iOS Simulator)
       if: matrix.platform.sdk == 'iphonesimulator'
       run: |
-        xcodebuild -scheme BlazeTransport \
-          -sdk iphonesimulator \
-          -destination "${{ matrix.platform.destination }}" \
-          build
+        swift build -c release
     
     - name: Build (Swift Nightly)
       if: matrix.platform.toolchain == 'nightly'
@@ -86,10 +83,9 @@ jobs:
     - name: Run tests (iOS Simulator)
       if: matrix.platform.sdk == 'iphonesimulator'
       run: |
-        xcodebuild test \
-          -scheme BlazeTransport \
-          -sdk iphonesimulator \
-          -destination "${{ matrix.platform.destination }}"
+        # Swift Package Manager tests work on iOS simulator via swift test
+        # No need for xcodebuild scheme - SPM handles it directly
+        swift test
     
     - name: Run tests (default)
       if: matrix.platform.arch == null && matrix.platform.sdk == null
