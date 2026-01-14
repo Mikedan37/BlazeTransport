@@ -933,12 +933,12 @@ swift run BlazeTransportBenchmarks --all
 
 Comprehensive benchmark results with detailed comparisons to QUIC, TCP, HTTP/2, and WebSocket are available in [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md).
 
-**Quick Summary**:
-- **Encoding/Decoding**: 250K-750K ops/sec (70-85% of QUIC)
-- **Latency**: p50 ~10ms, p99 ~25ms (comparable to QUIC)
-- **Loss Recovery**: 92% throughput at 5% loss (better than TCP's 80%)
-- **Stream Scaling**: Linear scaling up to 32 streams (2400 MB/s)
-- **Memory Efficiency**: 2.5-3.5MB per connection (comparable to QUIC)
+**Quick Summary** (experimental measurements from controlled conditions):
+- **Encoding/Decoding**: 250K-750K ops/sec (70-85% of QUIC, expected for Swift-native)
+- **Latency**: p50 ~10ms, p99 ~25ms (comparable to QUIC in test conditions)
+- **Loss Recovery**: ~92% throughput at 5% simulated loss (experimental measurement, not universal)
+- **Stream Scaling**: Linear scaling observed up to 32 streams (2400 MB/s in loopback)
+- **Memory Efficiency**: 2.5-3.5MB per connection (similar to QUIC in these measurements)
 
 ## License
 
