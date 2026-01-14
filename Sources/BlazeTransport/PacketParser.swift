@@ -55,16 +55,17 @@ public struct PacketParser {
         let flags = data[offset]
         offset += 1
         
-        let connectionID = UInt32(bigEndian: data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) })
+        // Read multi-byte integers manually to avoid alignment issues
+        let connectionID = UInt32(bigEndian: UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3]))
         offset += 4
         
-        let packetNumber = UInt32(bigEndian: data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) })
+        let packetNumber = UInt32(bigEndian: UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3]))
         offset += 4
         
-        let streamID = UInt32(bigEndian: data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) })
+        let streamID = UInt32(bigEndian: UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3]))
         offset += 4
         
-        let payloadLength = UInt16(bigEndian: data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt16.self) })
+        let payloadLength = UInt16(bigEndian: UInt16(data[offset]) << 8 | UInt16(data[offset + 1]))
         offset += 2
 
         guard data.count >= headerSize + Int(payloadLength) else {
