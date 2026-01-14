@@ -594,19 +594,19 @@ BlazeTransport explores what's possible when implementing QUIC-inspired transpor
 | **Zero C Interop** | Yes | No | No | No | No |
 | **Swift Concurrency** | Yes (async/await) | No | No | No | No |
 
-### Experimental Performance Measurements
+### Experimental Performance Snapshot (v0.1)
 
-**Note**: These are experimental measurements from controlled loopback conditions (v0.1). Results are not universal or standardized. BlazeTransport is slower than QUIC, which is expected for a Swift-native research implementation.
+**Note**: Controlled loopback benchmarks. Not standardized. Intended to illustrate tradeoffs, not compete with production QUIC stacks.
 
-| Metric | BlazeTransport | QUIC | TCP | HTTP/2 | WebSocket |
-|--------|----------------|------|-----|--------|-----------|
-| **Encoding Throughput** | 250K-750K ops/sec | 800K-1.2M | N/A | 400K-600K | 350K-500K |
-| **Latency (p50)** | ~10ms | 8-12ms | 9-13ms | 10-14ms | 9-13ms |
-| **Latency (p99)** | ~25ms | 20-30ms | 25-35ms | 28-40ms | 27-38ms |
-| **Throughput (1 stream)** | 85-95 MB/s | 100-120 MB/s | 70-90 MB/s | 60-80 MB/s | 75-105 MB/s |
-| **Throughput (32 streams)** | 2400 MB/s | 3000-3800 MB/s | 1600-2200 MB/s | 1400-2000 MB/s | N/A |
-| **Loss Recovery (5% loss)** | 92% | 94% | 80% | 78% | 79% |
-| **Memory per Connection** | 2.5-3.5 MB | 2.0-3.0 MB | 1.5-2.5 MB | 2.5-4.0 MB | 2.0-3.5 MB |
+| Metric | BlazeTransport | QUIC |
+|--------|----------------|------|
+| **Latency (p50 / p99)** | ~10ms / ~25ms | 8–12ms / 20–30ms |
+| **Throughput (1 stream)** | 85–95 MB/s | 100–120 MB/s |
+| **Throughput (32 streams)** | ~2400 MB/s | 3000–3800 MB/s |
+| **Loss Recovery (5% loss)** | ~92% | ~94% |
+| **Memory per Connection** | 2.5–3.5 MB | 2.0–3.0 MB |
+
+BlazeTransport achieves ~70–85% of QUIC performance, which is expected for a Swift-native research implementation without C interop.
 
 See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for detailed performance analysis.
 
@@ -633,13 +633,13 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 - [Benchmarks.md](Docs/Benchmarks.md) - Benchmark suite and results
 - [Internals.md](Docs/Internals.md) - Internal implementation details
 
-## Protocol Comparison: Swift-Native vs. Standard Protocols
+## Why Not Just Use QUIC?
 
 **Context**: This comparison shows where BlazeTransport intentionally overlaps with QUIC semantics, optimized for Swift-only, local/agent-centric use cases. This is experimental research, not a production protocol replacement.
 
-### Feature Comparison Matrix
+### Feature Comparison
 
-| Feature | BlazeTransport | QUIC | TCP | HTTP/2 | WebSocket | gRPC |
+| Feature | BlazeTransport | QUIC |
 |---------|----------------|------|-----|--------|-----------|------|
 | **Transport Protocol** | UDP | UDP | TCP | TCP | TCP | TCP |
 | **Multiplexing** | Yes Streams (32) | Yes Streams | No | Yes Streams | No | Yes Streams |
@@ -674,19 +674,6 @@ Comprehensive documentation is available in the [Docs/](Docs/) directory:
 
 **Legend**: Excellent | Good | Acceptable | Limited | No (Not Suitable) | Planned
 
-### Experimental Performance by Scenario
-
-**Note**: These are experimental measurements from controlled test conditions. BlazeTransport is slower than QUIC (70-85%), which is expected for a Swift-native implementation. Numbers are not universal benchmarks.
-
-| Scenario | BlazeTransport | QUIC | TCP | HTTP/2 | Winner |
-|----------|----------------|------|-----|--------|--------|
-| **LAN (1Gbps, <1ms RTT)** | 85-95 MB/s | 100-120 MB/s | 70-90 MB/s | 60-80 MB/s | QUIC |
-| **WAN (100Mbps, 50ms RTT)** | 75-85 MB/s | 90-100 MB/s | 60-75 MB/s | 55-70 MB/s | QUIC |
-| **Mobile (WiFi, 5% loss)** | 88 MB/s | 94 MB/s | 64 MB/s | 62 MB/s | QUIC |
-| **Multi-Stream (32 streams)** | 2400 MB/s | 3000-3800 MB/s | 1600-2200 MB/s | 1400-2000 MB/s | QUIC |
-| **Latency (p99)** | 25ms | 20-30ms | 25-35ms | 28-40ms | QUIC/BlazeTransport |
-| **Swift Interop Overhead** | 0% | 5-15% | 10-20% | 10-20% | **BlazeTransport** |
-| **Memory Efficiency** | 2.5-3.5 MB | 2.0-3.0 MB | 1.5-2.5 MB | 2.5-4.0 MB | TCP/QUIC |
 
 ## When to Use BlazeTransport
 
@@ -933,12 +920,6 @@ swift run BlazeTransportBenchmarks --all
 
 Comprehensive benchmark results with detailed comparisons to QUIC, TCP, HTTP/2, and WebSocket are available in [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md).
 
-**Quick Summary** (experimental measurements from controlled conditions):
-- **Encoding/Decoding**: 250K-750K ops/sec (70-85% of QUIC, expected for Swift-native)
-- **Latency**: p50 ~10ms, p99 ~25ms (comparable to QUIC in test conditions)
-- **Loss Recovery**: ~92% throughput at 5% simulated loss (experimental measurement, not universal)
-- **Stream Scaling**: Linear scaling observed up to 32 streams (2400 MB/s in loopback)
-- **Memory Efficiency**: 2.5-3.5MB per connection (similar to QUIC in these measurements)
 
 ## License
 
