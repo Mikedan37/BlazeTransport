@@ -6,8 +6,6 @@
 
 BlazeTransport is an experimental Swift-native transport engine exploring QUIC-inspired design without C interop. It implements multi-streaming, reliability, congestion control, and encryption entirely in Swift to study performance, safety, and ergonomics.
 
-**This is not production-ready.** It is a research system demonstrating systems-level Swift capabilities and trade-offs versus battle-tested QUIC implementations.
-
 ---
 
 BlazeTransport is a QUIC-inspired, Swift-native transport protocol with multi-streaming, reliability, congestion control, and typed messaging. It provides a high-level, type-safe API for establishing connections, opening streams, and sending/receiving Codable messages over a reliable, congestion-controlled transport layer built on UDP.
@@ -55,7 +53,6 @@ See [Examples/](Examples/) for complete echo server and client implementations.
 - Built-in encryption (ChaCha20-Poly1305 + X25519)
 - Connection migration support
 - Type-safe Codable messaging
-- Performance: 70-85% of QUIC benchmarks
 
 **What's Missing** (and why this is experimental):
 - 0-RTT handshakes (planned for v0.3+)
@@ -352,18 +349,18 @@ BlazeTransport explores what's possible when implementing QUIC-inspired transpor
 
 ### Where BlazeTransport Overlaps with QUIC Semantics
 
-| Feature | BlazeTransport | QUIC (C++) | TCP | HTTP/2 | WebSocket |
-|---------|---------------|------------|-----|--------|-----------|
-| **Native Swift API** | Yes | No | No | No | No |
-| **Type-Safe Messaging** | Yes (Codable) | No | No | No | No |
-| **Multi-Stream** | Yes (32 streams) | Yes | No | Yes | No |
-| **No Head-of-Line Blocking** | Yes | Yes | No | No | No |
-| **Connection Migration** | Yes | Yes | No | No | No |
-| **Built-in Encryption** | Yes (AEAD) | Yes | No (TLS) | No (TLS) | No (TLS) |
-| **Loss Recovery** | Yes (~92% @ 5% loss, experimental) | Yes (94%) | Limited (~80%) | Limited (~78%) | Limited (~79%) |
-| **Performance** | ~70–85% of QUIC (controlled benchmarks) | 100% | 70-80% | 65-75% | 60-70% |
-| **Zero C Interop** | Yes | No | No | No | No |
-| **Swift Concurrency** | Yes (async/await) | No | No | No | No |
+| Feature | BlazeTransport | QUIC (C++) |
+|---------|---------------|------------|
+| **Native Swift API** | Yes | No |
+| **Type-Safe Messaging** | Yes (Codable) | No |
+| **Multi-Stream** | Yes (32 streams) | Yes |
+| **No Head-of-Line Blocking** | Yes | Yes |
+| **Connection Migration** | Yes | Yes |
+| **Built-in Encryption** | Yes (AEAD) | Yes (TLS 1.3) |
+| **Loss Recovery** | Yes (~92% @ 5% loss, experimental) | Yes (~94%) |
+| **Performance** | ~70–85% of QUIC (controlled benchmarks) | 100% |
+| **Zero C Interop** | Yes | No |
+| **Swift Concurrency** | Yes (async/await) | No |
 
 ### Experimental Performance Snapshot (v0.1)
 
