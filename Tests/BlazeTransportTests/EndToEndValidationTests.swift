@@ -4,12 +4,7 @@ import Foundation
 
 /// Comprehensive end-to-end validation tests that prove BlazeTransport works correctly.
 /// These tests use mock sockets to verify the complete data path.
-
-// Shared TestMessage struct - matches LoopbackTransportTests
-struct TestMessage: Codable, Equatable {
-    let id: Int
-    let text: String
-}
+/// Uses TestMessage from LoopbackTransportTests.
 
 /// Test that proves end-to-end message delivery works.
 final class EndToEndValidationTests: XCTestCase {

@@ -17,7 +17,7 @@ final class PacketLossRecoveryTests: XCTestCase {
         let initialWindow = congestion.congestionWindowBytes
         
         // Simulate sending packets with 5% loss
-        for i in 0..<totalPackets {
+        for _ in 0..<totalPackets {
             let packetNumber = reliability.allocatePacketNumber()
             reliability.notePacketSent(packetNumber)
             packetsSent += 1

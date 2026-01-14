@@ -25,7 +25,7 @@ final class KeyRotationTests: XCTestCase {
     }
     
     func testKeyRotationAfterTime() async throws {
-        var security = SecurityManager()  // Default maxTimePerKey is 3600 seconds
+        let security = SecurityManager()  // Default maxTimePerKey is 3600 seconds
         
         XCTAssertFalse(security.shouldRotateKey(now: Date()))
         
