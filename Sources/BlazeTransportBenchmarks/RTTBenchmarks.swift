@@ -28,8 +28,9 @@ internal struct RTTBenchmarks {
         
         for i in 0..<iterations {
             let packetNum = UInt32(i % 1000) + 1
-            reliability.notePacketSent(packetNum)
-            
+            let dummyPacket = BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: packetNum, streamID: 0, payloadLength: 0), payload: Data())
+            reliability.notePacketSent(packetNum, packet: dummyPacket)
+
             // Simulate RTT sample
             let rtt = Double.random(in: 0.001...0.1)  // 1ms to 100ms
             // Note: In real implementation, RTT comes from timing
@@ -54,7 +55,8 @@ internal struct RTTBenchmarks {
         var reliability = ReliabilityEngine()
         
         // Initialize RTT
-        reliability.notePacketSent(1)
+        let initPacket = BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: 1, streamID: 0, payloadLength: 0), payload: Data())
+        reliability.notePacketSent(1, packet: initPacket)
         reliability.noteAckReceived(for: 1)
         
         let startTime = Date()

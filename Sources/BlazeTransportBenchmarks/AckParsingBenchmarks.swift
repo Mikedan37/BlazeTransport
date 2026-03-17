@@ -26,8 +26,10 @@ internal struct AckParsingBenchmarks {
         
         // Generate ACK ranges
         for i in 1...100 {
-            reliability.notePacketSent(UInt32(i))
-            reliability.noteAckReceived(for: UInt32(i))
+            let pn = UInt32(i)
+            let dummyPacket = BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: pn, streamID: 0, payloadLength: 0), payload: Data())
+            reliability.notePacketSent(pn, packet: dummyPacket)
+            reliability.noteAckReceived(for: pn)
         }
         
         let startTime = Date()
@@ -54,8 +56,10 @@ internal struct AckParsingBenchmarks {
         // Create complex ACK pattern (gaps)
         for i in 1...1000 {
             if i % 10 != 0 {  // Skip every 10th packet
-                reliability.notePacketSent(UInt32(i))
-                reliability.noteAckReceived(for: UInt32(i))
+                let pn = UInt32(i)
+                let dummyPacket = BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: pn, streamID: 0, payloadLength: 0), payload: Data())
+                reliability.notePacketSent(pn, packet: dummyPacket)
+                reliability.noteAckReceived(for: pn)
             }
         }
         

@@ -31,7 +31,7 @@ actor ConnectionManager {
     private var packetsLost: Int = 0
     private var inFlightBytes: Int = 0
     private var sendQueue: [(Data, UInt32)] = []
-    
+
     init(host: String, port: UInt16, security: BlazeSecurityConfig, useMockSocket: Bool = false) {
         self.host = host
         self.port = port
@@ -89,7 +89,7 @@ actor ConnectionManager {
                 var framePayload = Data()
                 framePayload.append(BlazeFrameType.data.rawValue)
                 framePayload.append(frameData)
-                
+
                 // Check congestion window and pacing
                 let canSend = congestion.canSend(bytes: framePayload.count, now: Date())
                 guard canSend else {
@@ -97,7 +97,7 @@ actor ConnectionManager {
                     sendQueue.append((frameData, streamID))
                     continue
                 }
-                
+
                 // Create packet with frame data
                 let packetNumber = reliability.allocatePacketNumber()
                 let packet = BlazePacket(
@@ -112,19 +112,19 @@ actor ConnectionManager {
                     payload: framePayload
                 )
 
-                reliability.notePacketSent(packetNumber)
+                reliability.notePacketSent(packetNumber, packet: packet)
                 packetsSent += 1
                 inFlightBytes += framePayload.count
                 congestion.markInFlight(bytes: framePayload.count)
-                
+
                 // Add to pending packets for coalescing
                 pendingPackets.append(packet)
-                
+
                 // Flush pending packets if batch is ready or MTU would be exceeded
                 await flushPendingPackets()
-                
+
                 bytesSent += framePayload.count
-                
+
                 // Process queued packets if window allows
                 await processSendQueue()
 
@@ -134,21 +134,21 @@ actor ConnectionManager {
             }
         }
     }
-    
+
     private func processSendQueue() async {
         while !sendQueue.isEmpty && inFlightBytes < congestion.congestionWindowBytes {
             let (frameData, streamID) = sendQueue.removeFirst()
-            
+
             if inFlightBytes + frameData.count > congestion.congestionWindowBytes {
                 sendQueue.insert((frameData, streamID), at: 0)
                 break
             }
-            
+
             // Create frame with type prefix
             var framePayload = Data()
             framePayload.append(BlazeFrameType.data.rawValue)
             framePayload.append(frameData)
-            
+
             let packetNumber = reliability.allocatePacketNumber()
             let packet = BlazePacket(
                 header: BlazePacketHeader(
@@ -161,11 +161,11 @@ actor ConnectionManager {
                 ),
                 payload: framePayload
             )
-            
-            reliability.notePacketSent(packetNumber)
+
+            reliability.notePacketSent(packetNumber, packet: packet)
             packetsSent += 1
             inFlightBytes += framePayload.count
-            
+
             do {
                 try await packetEngine.send(packet)
                 bytesSent += framePayload.count
@@ -199,6 +199,15 @@ actor ConnectionManager {
 
         let effects = connectionMachine.process(.appCloseRequested)
         await applyEffects(effects, packet: nil)
+
+        // Cancel all timers
+        for (_, task) in timers {
+            task.cancel()
+        }
+        timers.removeAll()
+
+        // Close packet engine
+        await packetEngine.close()
     }
 
     /// Close a specific stream.
@@ -209,9 +218,9 @@ actor ConnectionManager {
     }
 
     func stats() async -> BlazeTransportStats {
-        let rtt = reliability.rttEstimate ?? 0.0
+        let rtt = reliability.smoothedRTT ?? 0.0
         let congestionWindow = congestion.congestionWindowBytes
-        
+
         // Calculate loss rate over sent packets
         let lossRate = packetsSent > 0 ? Double(packetsLost) / Double(packetsSent) : 0.0
 
@@ -228,52 +237,52 @@ actor ConnectionManager {
 
     private func handleInboundPacket(_ packet: BlazePacket) async {
         bytesReceived += packet.payload.count
-        
-        // Validate address (connection migration check)
-        // Note: In real implementation, would get address from socket
-        // For now, assume address is valid
-        
+
         // Feed event to connection state machine (matched by case, not value)
         let effects = connectionMachine.process(.packetReceived)
         await applyEffects(effects, packet: packet)
 
         // Parse frame type
         guard !packet.payload.isEmpty else { return }
-        
+
         let frameTypeRaw = packet.payload[0]
         guard let frameType = BlazeFrameType(rawValue: frameTypeRaw) else { return }
-        
+
         // Handle ACK frames
         if frameType == .ack {
             // Parse ACK frame with selective ACK ranges
             let ackRanges = parseAckFrame(packet.payload)
-            
-            // Process each ACK range
+
+            // Process each ACK range, accumulating actual bytes acked
+            var totalBytesAcked = 0
             for range in ackRanges {
                 for packetNum in range.start...range.end {
                     if !reliability.isAcked(packetNum) {
+                        // Get the packet size before acknowledging
+                        if let entry = reliability.inFlight[packetNum] {
+                            totalBytesAcked += entry.packet.payload.count
+                        }
                         reliability.noteAckReceived(for: packetNum)
                         packetsAcked += 1
                     }
                 }
             }
-            
+
             // Update congestion control with RTT
-            let bytesAcked = Int(packet.header.payloadLength)
-            let rtt = reliability.rttEstimate
-            congestion.onAck(bytesAcked: bytesAcked, rtt: rtt)
-            inFlightBytes = max(0, inFlightBytes - bytesAcked)
-            
+            let rtt = reliability.smoothedRTT
+            congestion.onAck(bytesAcked: totalBytesAcked, rtt: rtt)
+            inFlightBytes = max(0, inFlightBytes - totalBytesAcked)
+
             // Check for key rotation
             if securityManager.shouldRotateKey(now: Date()) {
                 // TODO: Rotate key (would generate new key from handshake)
             }
-            
+
             // Process send queue now that window may have opened
             await processSendQueue()
             return
         }
-        
+
         // Send ACK for data frames
         if frameType == .data && packet.header.streamID != 0 {
             // Generate ACK frame
@@ -289,7 +298,7 @@ actor ConnectionManager {
                 ),
                 payload: ackFrame
             )
-            
+
             do {
                 try await packetEngine.send(ackPacket)
             } catch {
@@ -321,22 +330,22 @@ actor ConnectionManager {
             }
         }
     }
-    
+
     private func createAckFrame(for packetNumber: UInt32) -> Data {
         var data = Data()
         data.append(BlazeFrameType.ack.rawValue)
-        
+
         // Get selective ACK ranges
         let ackRanges = reliability.getAckRanges()
-        
+
         // Encode largest ACKed packet number
         withUnsafeBytes(of: packetNumber.bigEndian) { bytes in
             data.append(contentsOf: bytes)
         }
-        
+
         // Encode number of ranges (1 byte)
         data.append(UInt8(min(ackRanges.count, 255)))
-        
+
         // Encode each range (start and end, 4 bytes each)
         for range in ackRanges.prefix(255) {
             withUnsafeBytes(of: range.start.bigEndian) { bytes in
@@ -346,16 +355,16 @@ actor ConnectionManager {
                 data.append(contentsOf: bytes)
             }
         }
-        
+
         return data
     }
-    
+
     private func parseAckFrame(_ data: Data) -> [AckRange] {
         guard data.count >= 5 else { return [] }  // frame type + packet number (4 bytes)
-        
+
         var offset = 1  // Skip frame type
         var ranges: [AckRange] = []
-        
+
         // Read largest ACKed packet number (manual byte read to avoid alignment issues)
         let largestAcked = UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3])
         offset += 4
@@ -374,21 +383,21 @@ actor ConnectionManager {
 
             let end = UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3])
             offset += 4
-            
+
             ranges.append(AckRange(start: start, end: end))
         }
-        
+
         // If no ranges, create single range for largest ACKed
         if ranges.isEmpty {
             ranges.append(AckRange(start: largestAcked, end: largestAcked))
         }
-        
+
         return ranges
     }
-    
+
     private func flushPendingPackets() async {
         guard !pendingPackets.isEmpty else { return }
-        
+
         // Coalesce packets if multiple pending and MTU permits
         if pendingPackets.count > 1 {
             let coalesced = PacketCoalescer.coalesce(pendingPackets)
@@ -398,7 +407,7 @@ actor ConnectionManager {
                 // This requires PacketEngine to support raw datagram sending
             }
         }
-        
+
         // Send all pending packets
         for packet in pendingPackets {
             do {
@@ -407,7 +416,7 @@ actor ConnectionManager {
                 // Handle error - packet will be retransmitted if needed
             }
         }
-        
+
         pendingPackets.removeAll()
     }
 
@@ -429,10 +438,10 @@ actor ConnectionManager {
                         payload: effectPacket.payload
                     )
                     : effectPacket
-                
+
                 do {
                     try await packetEngine.send(packetToSend)
-                    reliability.notePacketSent(packetToSend.header.packetNumber)
+                    reliability.notePacketSent(packetToSend.header.packetNumber, packet: packetToSend)
                 } catch {
                     // TODO: Handle send errors
                 }
@@ -440,13 +449,11 @@ actor ConnectionManager {
             case .startTimer(let timerID, let interval):
                 // Cancel existing timer if any
                 timers[timerID]?.cancel()
-                
+
                 // Create new timer task
                 let timerIDCopy = timerID
-                timers[timerID] = Task { [weak self] in
+                timers[timerID] = Task { [self] in
                     try? await Task.sleep(for: .seconds(interval))
-                    
-                    guard let self = self else { return }
                     await self.handleTimeout(timerID: timerIDCopy)
                 }
 
@@ -466,23 +473,31 @@ actor ConnectionManager {
             }
         }
     }
-    
+
     private func handleTimeout(timerID: String) async {
         let effects = connectionMachine.process(ConnectionEvent.timeout(timerID))
         await applyEffects(effects, packet: nil)
-        
+
         // Handle retransmission timeout
         if timerID.hasPrefix("retransmit-") {
             let now = Date()
-            let timeout = reliability.rttEstimate.map { $0 * 2 } ?? 1.0
+            let timeout = reliability.rto.map { $0 * 2 } ?? 1.0
             let timedOut = reliability.timedOutPackets(now: now, timeout: timeout)
-            
-            for packetNumber in timedOut {
+
+            for entry in timedOut {
                 packetsLost += 1
                 congestion.onLoss()
-                // TODO: Retransmit packet
+                // Retransmit with new packet number
+                let newPacketNumber = reliability.allocatePacketNumber()
+                var retransmitPacket = entry.packet
+                retransmitPacket.header.packetNumber = newPacketNumber
+                reliability.notePacketSent(newPacketNumber, packet: retransmitPacket)
+                do {
+                    try await packetEngine.send(retransmitPacket)
+                } catch {
+                    // Send failed -- will be retried on next timeout
+                }
             }
         }
     }
 }
-

@@ -29,7 +29,8 @@ internal struct LossSimulation {
             // Simulate sending packets with loss
             for i in 0..<packetsToSend {
                 let packetNumber = reliability.allocatePacketNumber()
-                reliability.notePacketSent(packetNumber)
+                let pkt = BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: packetNumber, streamID: 0, payloadLength: UInt16(frameSize)), payload: Data(count: frameSize))
+                reliability.notePacketSent(packetNumber, packet: pkt)
                 packetsSent += 1
                 totalBytesSent += frameSize
                 
@@ -61,7 +62,7 @@ internal struct LossSimulation {
                 "effective_throughput_mbps": effectiveThroughputMBps,
                 "congestion_window_bytes": congestion.congestionWindowBytes,
                 "ssthresh": congestion.ssthresh,
-                "rtt_estimate": reliability.rttEstimate ?? 0.0
+                "rtt_estimate": reliability.smoothedRTT ?? 0.0
             ])
             
             print("      Retransmissions: \(retransmissions), Effective Throughput: \(String(format: "%.2f", effectiveThroughputMBps)) MB/s")

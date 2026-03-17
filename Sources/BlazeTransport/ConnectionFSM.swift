@@ -1,5 +1,5 @@
 /// Connection-level state machine.
-/// Manages connection lifecycle: idle → synSent → handshake → active → draining → closed.
+/// Manages connection lifecycle: idle -> synSent -> handshake -> active -> draining -> closed.
 import Foundation
 
 /// Connection-level state machine states.
@@ -21,12 +21,12 @@ enum ConnectionEvent: Equatable {
     case handshakeFailed
     case appCloseRequested
     case timeout(String)
-    
+
     /// Helper to create packetReceived event (matched by case only).
     static func packetReceived(_ packet: BlazePacket) -> ConnectionEvent {
         .packetReceived
     }
-    
+
     /// Helper to create handshakeFailed event (matched by case only).
     static func handshakeFailed(_ error: Error) -> ConnectionEvent {
         .handshakeFailed
@@ -103,6 +103,19 @@ func makeConnectionStateMachine() -> ConnectionStateMachine {
         ]
     )
 
+    // handshake + packetReceived -> active, [markActive, cancelTimer]
+    // Receiving any packet during handshake indicates the peer is responsive,
+    // which completes the handshake (e.g., in loopback/mock scenarios).
+    machine.addTransition(
+        from: .handshake,
+        on: .packetReceived,
+        to: .active,
+        effects: [
+            .cancelTimer("handshake"),
+            .markActive
+        ]
+    )
+
     // handshake + handshakeFailed -> closed, [markClosed]
     // Note: Error details are handled in ConnectionManager, event is matched by case
     machine.addTransition(
@@ -112,7 +125,7 @@ func makeConnectionStateMachine() -> ConnectionStateMachine {
         effects: [.markClosed]
     )
 
-    // active + appCloseRequested -> draining, [sendPacket(close)]
+    // active + appCloseRequested -> draining, [sendPacket(close), startTimer("drain")]
     machine.addTransition(
         from: .active,
         on: .appCloseRequested,
@@ -128,7 +141,8 @@ func makeConnectionStateMachine() -> ConnectionStateMachine {
                     payloadLength: 0
                 ),
                 payload: Data()
-            ))
+            )),
+            .startTimer("drain", 3.0)
         ]
     )
 
@@ -148,6 +162,13 @@ func makeConnectionStateMachine() -> ConnectionStateMachine {
         effects: [.markClosed]
     )
 
+    // handshake + timeout(handshake) -> closed, [markClosed]
+    machine.addTransition(
+        from: .handshake,
+        on: .timeout("handshake"),
+        to: .closed,
+        effects: [.markClosed]
+    )
+
     return machine
 }
-

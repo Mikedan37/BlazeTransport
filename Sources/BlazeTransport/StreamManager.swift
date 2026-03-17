@@ -109,6 +109,15 @@ func makeStreamStateMachine() -> StreamStateMachine {
         effects: [.emitFrame(Data())]
     )
 
+    // open + appSend -> open, emitFrame(data)
+    // Allow sending on an already-open stream.
+    machine.addTransition(
+        from: .open,
+        on: .appSend,
+        to: .open,
+        effects: [.emitFrame(Data())]
+    )
+
     // open + frameReceived -> open, deliverToApp(data)
     // Note: Data details are handled in StreamManager, event is matched by case
     machine.addTransition(

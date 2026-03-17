@@ -4,20 +4,24 @@ import XCTest
 /// Integration tests for backpressure and congestion handling.
 /// Ensures large bursts cause congestion window reduction without crashes.
 final class BackpressureTests: XCTestCase {
-    
+
+    private func makeDummyPacket(_ packetNumber: UInt32) -> BlazePacket {
+        BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: packetNumber, streamID: 0, payloadLength: 0), payload: Data())
+    }
+
     func testBackpressureLargeBurst() async throws {
         var congestion = CongestionController(initialWindow: 1460, initialSsthresh: 65535)
-        
+
         // Simulate large burst of data
         let burstSize = 1000000 // 1MB burst
         var bytesSent = 0
         var losses = 0
-        
+
         // Simulate sending large burst with some loss
         while bytesSent < burstSize {
             let chunkSize = min(1460, burstSize - bytesSent)
             bytesSent += chunkSize
-            
+
             // Simulate occasional loss (5%)
             if Double.random(in: 0...1) < 0.05 {
                 congestion.onLoss()
@@ -26,7 +30,7 @@ final class BackpressureTests: XCTestCase {
                 congestion.onAck(bytesAcked: chunkSize, rtt: nil)
             }
         }
-        
+
         // Window should have adjusted based on losses
         // Note: With losses, window may grow but should be bounded by AIMD behavior
         // The exact bound depends on loss pattern, so we just verify it's positive
@@ -34,43 +38,43 @@ final class BackpressureTests: XCTestCase {
             // Window may have grown during slow start before losses, so we just check it's reasonable
             XCTAssertTrue(congestion.congestionWindowBytes > 0)
         }
-        
+
         // Should not crash
         XCTAssertTrue(congestion.congestionWindowBytes > 0)
         XCTAssertTrue(congestion.ssthresh > 0)
     }
-    
+
     func testBackpressureRecovery() async throws {
         var congestion = CongestionController(initialWindow: 1460, initialSsthresh: 65535)
-        
+
         // Cause congestion with losses
         for _ in 0..<5 {
             congestion.onLoss()
         }
-        
+
         let congestedWindow = congestion.congestionWindowBytes
-        
+
         // Simulate recovery with successful ACKs
         for _ in 0..<20 {
             congestion.onAck(bytesAcked: 1460, rtt: nil)
         }
-        
+
         // Window should recover (grow back)
         XCTAssertTrue(congestion.congestionWindowBytes >= congestedWindow)
-        
+
         // Should not crash
         XCTAssertTrue(congestion.congestionWindowBytes > 0)
     }
-    
+
     func testBackpressureExtremeLoad() async throws {
         var congestion = CongestionController()
         var reliability = ReliabilityEngine()
-        
+
         // Simulate extreme load: many packets, high loss rate
         for _ in 0..<10000 {
             let packetNumber = reliability.allocatePacketNumber()
-            reliability.notePacketSent(packetNumber)
-            
+            reliability.notePacketSent(packetNumber, packet: makeDummyPacket(packetNumber))
+
             // 10% loss rate
             if Double.random(in: 0...1) < 0.10 {
                 congestion.onLoss()
@@ -79,7 +83,7 @@ final class BackpressureTests: XCTestCase {
             congestion.onAck(bytesAcked: 1460, rtt: nil)
         }
         }
-        
+
         // Should still be in valid state
         XCTAssertTrue(congestion.congestionWindowBytes > 0)
         XCTAssertTrue(congestion.ssthresh > 0)

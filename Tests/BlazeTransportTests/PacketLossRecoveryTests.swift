@@ -4,26 +4,30 @@ import XCTest
 /// Integration tests for packet loss recovery.
 /// Simulates 5% loss and validates retransmission behavior.
 final class PacketLossRecoveryTests: XCTestCase {
-    
+
+    private func makeDummyPacket(_ packetNumber: UInt32) -> BlazePacket {
+        BlazePacket(header: BlazePacketHeader(version: 1, flags: 0, connectionID: 0, packetNumber: packetNumber, streamID: 0, payloadLength: 0), payload: Data())
+    }
+
     func testPacketLossRecovery() async throws {
         var reliability = ReliabilityEngine()
         var congestion = CongestionController()
-        
+
         let totalPackets = 1000
         let lossRate = 0.05 // 5%
         var packetsSent = 0
         var packetsAcked = 0
         var retransmissions = 0
-        
+
         // Simulate sending packets with 5% loss
         for _ in 0..<totalPackets {
             let packetNumber = reliability.allocatePacketNumber()
-            reliability.notePacketSent(packetNumber)
+            reliability.notePacketSent(packetNumber, packet: makeDummyPacket(packetNumber))
             packetsSent += 1
-            
+
             // Simulate 5% packet loss
             let isLost = Double.random(in: 0...1) < lossRate
-            
+
             if !isLost {
                 // Packet arrives successfully
                 reliability.noteAckReceived(for: packetNumber)
@@ -35,7 +39,7 @@ final class PacketLossRecoveryTests: XCTestCase {
                 congestion.onLoss()
             }
         }
-        
+
         // Validate behavior
         XCTAssertEqual(packetsSent, totalPackets)
         XCTAssertTrue(packetsAcked < packetsSent) // Some packets lost
@@ -43,7 +47,7 @@ final class PacketLossRecoveryTests: XCTestCase {
         // Window grows via ACKs and shrinks on loss; with 950 ACKs and ~50 losses,
         // AIMD settles well above the initial 1460. Verify losses did reduce ssthresh.
         XCTAssertTrue(congestion.ssthresh < congestion.congestionWindowBytes || congestion.ssthresh >= 1460)
-        
+
         // Validate RTT estimation exists after ACKs
         // Note: RTT estimate may be nil if no packets were ACKed
         if packetsAcked > 0 {
@@ -51,23 +55,23 @@ final class PacketLossRecoveryTests: XCTestCase {
             XCTAssertTrue(true) // RTT estimation logic validated
         }
     }
-    
+
     func testCongestionWindowEvolution() async throws {
         var congestion = CongestionController(initialWindow: 1460, initialSsthresh: 65535)
         let initialWindow = congestion.congestionWindowBytes
-        
+
         // Simulate successful ACKs (slow start)
         for _ in 0..<10 {
             congestion.onAck(bytesAcked: 1460, rtt: nil)
         }
-        
+
         // Window should grow during slow start
         XCTAssertTrue(congestion.congestionWindowBytes > initialWindow)
-        
+
         // Simulate loss
         let windowBeforeLoss = congestion.congestionWindowBytes
         congestion.onLoss()
-        
+
         // Window should reduce after loss
         XCTAssertTrue(congestion.congestionWindowBytes < windowBeforeLoss)
         XCTAssertTrue(congestion.congestionWindowBytes >= 1460) // Should not go below minimum
