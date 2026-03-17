@@ -31,7 +31,7 @@ public enum BlazeBinaryHelpers {
         guard data.count >= 4 else {
             throw BlazeTransportError.decodingFailed
         }
-        let length = data.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        let length = data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian }
         guard data.count >= 4 + Int(length) else {
             throw BlazeTransportError.decodingFailed
         }

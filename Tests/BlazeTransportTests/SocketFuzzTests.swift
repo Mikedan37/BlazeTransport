@@ -4,7 +4,12 @@ import XCTest
 /// Fuzz tests for socket layer reliability and error handling.
 /// Tests edge cases, malformed data, and stress scenarios.
 final class SocketFuzzTests: XCTestCase {
-    
+
+    override func setUp() {
+        super.setUp()
+        MockSocketRegistry.reset()
+    }
+
     // MARK: - Packet Encoding/Decoding Fuzz Tests
     
     func testFuzzPacketEncoding() {

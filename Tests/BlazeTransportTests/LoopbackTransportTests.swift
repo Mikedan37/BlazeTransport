@@ -10,7 +10,12 @@ struct TestMessage: Codable, Equatable {
 /// Loopback transport test using mock sockets.
 /// Tests end-to-end connection, stream opening, and message sending/receiving.
 final class LoopbackTransportTests: XCTestCase {
-    
+
+    override func setUp() {
+        super.setUp()
+        MockSocketRegistry.reset()
+    }
+
     func testConnectionAndStreamLifecycle() async throws {
         // Create connections with mock sockets for loopback testing
         let serverConnection = DefaultBlazeConnection(

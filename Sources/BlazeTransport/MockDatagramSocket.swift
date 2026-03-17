@@ -70,16 +70,20 @@ final class MockDatagramSocket: DatagramSocket {
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }
-        
-        // Wait for data (simplified - in real implementation would use async/await)
+
+        // Wait for data with a 5-second timeout to prevent test hangs
+        let deadline = Date().addingTimeInterval(5.0)
         while receiveQueue.isEmpty {
             Thread.sleep(forTimeInterval: 0.001) // 1ms
-            
+
             if isClosed {
                 throw BlazeTransportError.connectionClosed
             }
+            if Date() > deadline {
+                throw BlazeTransportError.timeout
+            }
         }
-        
+
         return receiveQueue.removeFirst()
     }
     

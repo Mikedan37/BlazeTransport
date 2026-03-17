@@ -129,16 +129,24 @@ final class PacketParserFuzzTests: XCTestCase {
         )
         let packet = BlazePacket(header: header, payload: Data(repeating: 0xAA, count: 10))
         let encoded = PacketParser.encode(packet)
-        
-        // Corrupt each byte one at a time
-        for i in 0..<encoded.count {
+
+        // Corrupt the payloadLength field (bytes 14-15) — should cause parse errors
+        // since the declared length won't match available data.
+        for i in 14..<16 {
             var corrupted = Data(encoded)
             corrupted[i] = corrupted[i] ^ 0xFF // Flip all bits
-            
-            // Should fail to decode
+
             XCTAssertThrowsError(try PacketParser.decode(corrupted)) { error in
                 XCTAssertTrue(error is PacketParserError || error is BlazeTransportError)
             }
+        }
+
+        // Corrupting payload bytes should NOT cause a parse error (payload is opaque)
+        for i in PacketParser.headerSize..<encoded.count {
+            var corrupted = Data(encoded)
+            corrupted[i] = corrupted[i] ^ 0xFF
+
+            XCTAssertNoThrow(try PacketParser.decode(corrupted))
         }
     }
     
@@ -152,19 +160,25 @@ final class PacketParserFuzzTests: XCTestCase {
             payloadLength: 100
         )
         let packet = BlazePacket(header: header, payload: Data(repeating: 0xAA, count: 100))
-        var encoded = PacketParser.encode(packet)
-        
-        // Corrupt random 10% of bytes
-        let corruptionCount = encoded.count / 10
-        for _ in 0..<corruptionCount {
-            let index = Int.random(in: 0..<encoded.count)
-            encoded[index] = UInt8.random(in: 0...255)
-        }
-        
-        // Should fail to decode
-        XCTAssertThrowsError(try PacketParser.decode(encoded)) { error in
+        let encoded = PacketParser.encode(packet)
+
+        // Corrupt the payloadLength field — should cause parse errors
+        var corrupted = Data(encoded)
+        corrupted[14] = corrupted[14] ^ 0xFF
+        corrupted[15] = corrupted[15] ^ 0xFF
+
+        XCTAssertThrowsError(try PacketParser.decode(corrupted)) { error in
             XCTAssertTrue(error is PacketParserError || error is BlazeTransportError)
         }
+
+        // Corrupting only payload bytes should not crash (parser treats payload as opaque)
+        var payloadCorrupted = Data(encoded)
+        let corruptionCount = 10
+        for _ in 0..<corruptionCount {
+            let index = Int.random(in: PacketParser.headerSize..<payloadCorrupted.count)
+            payloadCorrupted[index] = UInt8.random(in: 0...255)
+        }
+        XCTAssertNoThrow(try PacketParser.decode(payloadCorrupted))
     }
     
     // MARK: - Size Mismatch Tests

@@ -63,7 +63,12 @@ final class SelectiveAckTests: XCTestCase {
     
     func testOutOfOrderAcks() async throws {
         var reliability = ReliabilityEngine()
-        
+
+        // Send packets 1-5 first so noteAckReceived can find them in inFlight
+        for i: UInt32 in 1...5 {
+            reliability.notePacketSent(i)
+        }
+
         // ACK packets out of order
         reliability.noteAckReceived(for: 5)
         reliability.noteAckReceived(for: 3)

@@ -56,6 +56,7 @@ final class PacketParserTests: XCTestCase {
     }
     
     func testPacketParserBigEndian() async throws {
+        let payloadData = Data(repeating: 0xAA, count: 0x1234)
         let packet = BlazePacket(
             header: BlazePacketHeader(
                 version: 1,
@@ -65,7 +66,7 @@ final class PacketParserTests: XCTestCase {
                 streamID: 0x0000FFFF,
                 payloadLength: 0x1234
             ),
-            payload: Data()
+            payload: payloadData
         )
         
         let encoded = PacketParser.encode(packet)

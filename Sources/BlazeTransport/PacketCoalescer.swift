@@ -71,7 +71,7 @@ internal struct PacketCoalescer {
             let headerSize = PacketParser.headerSize
             // Read payloadLength manually to avoid alignment issues (offset 14-15 in header)
             let payloadLengthOffset = headerSize - 2
-            let payloadLength = UInt16(bigEndian: UInt16(remaining[payloadLengthOffset]) << 8 | UInt16(remaining[payloadLengthOffset + 1]))
+            let payloadLength = UInt16(remaining[payloadLengthOffset]) << 8 | UInt16(remaining[payloadLengthOffset + 1])
             
             let totalSize = headerSize + Int(payloadLength)
             

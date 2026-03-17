@@ -356,29 +356,23 @@ actor ConnectionManager {
         var offset = 1  // Skip frame type
         var ranges: [AckRange] = []
         
-        // Read largest ACKed packet number
-        let largestAcked = data.withUnsafeBytes { bytes in
-            bytes.load(fromByteOffset: offset, as: UInt32.self).bigEndian
-        }
+        // Read largest ACKed packet number (manual byte read to avoid alignment issues)
+        let largestAcked = UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3])
         offset += 4
-        
+
         // Read number of ranges
         guard data.count > offset else { return [] }
         let rangeCount = Int(data[offset])
         offset += 1
-        
+
         // Read ranges
         for _ in 0..<min(rangeCount, 255) {
             guard data.count >= offset + 8 else { break }  // Need 8 bytes for start + end
-            
-            let start = data.withUnsafeBytes { bytes in
-                bytes.load(fromByteOffset: offset, as: UInt32.self).bigEndian
-            }
+
+            let start = UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3])
             offset += 4
-            
-            let end = data.withUnsafeBytes { bytes in
-                bytes.load(fromByteOffset: offset, as: UInt32.self).bigEndian
-            }
+
+            let end = UInt32(data[offset]) << 24 | UInt32(data[offset + 1]) << 16 | UInt32(data[offset + 2]) << 8 | UInt32(data[offset + 3])
             offset += 4
             
             ranges.append(AckRange(start: start, end: end))
