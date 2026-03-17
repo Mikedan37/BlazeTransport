@@ -4,6 +4,11 @@ import Foundation
 /// Uses nonisolated(unsafe) for test-only code to avoid Swift 6 concurrency issues.
 enum MockSocketRegistry {
     nonisolated(unsafe) static var sockets: [String: MockDatagramSocket] = [:]
+    
+    /// Reset the registry (for test cleanup).
+    nonisolated(unsafe) static func reset() {
+        sockets.removeAll()
+    }
 }
 
 /// Mock datagram socket for testing and benchmarks.
@@ -23,6 +28,19 @@ final class MockDatagramSocket: DatagramSocket {
         }
         
         let key = addressKey(host: host, port: port)
+        
+        // If already bound to this address, allow rebind (no-op)
+        if let bound = boundAddress, bound.host == host && bound.port == port {
+            return
+        }
+        
+        // If bound to a different address, remove old binding first
+        if let bound = boundAddress {
+            let oldKey = addressKey(host: bound.host, port: bound.port)
+            MockSocketRegistry.sockets.removeValue(forKey: oldKey)
+        }
+        
+        // Check if address is already in use by another socket
         guard MockSocketRegistry.sockets[key] == nil else {
             throw BlazeTransportError.underlying(NSError(domain: "MockSocket", code: Int(EADDRINUSE), userInfo: nil))
         }
@@ -35,10 +53,12 @@ final class MockDatagramSocket: DatagramSocket {
         guard !isClosed else {
             throw BlazeTransportError.connectionClosed
         }
-        
+
         let key = addressKey(host: host, port: port)
+        let fromHost = boundAddress?.host ?? "0.0.0.0"
+        let fromPort = boundAddress?.port ?? 0
         if let targetSocket = MockSocketRegistry.sockets[key] {
-            targetSocket.enqueue(data: data, fromHost: host, fromPort: port)
+            targetSocket.enqueue(data: data, fromHost: fromHost, fromPort: fromPort)
         }
     }
     

@@ -1,5 +1,4 @@
 import Foundation
-import BlazeBinary
 
 /// Default implementation of BlazeStream protocol.
 /// Handles encoding/decoding of Codable types and delegates to ConnectionManager.

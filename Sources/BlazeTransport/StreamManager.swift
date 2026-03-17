@@ -1,7 +1,6 @@
-/// Stream manager and per-stream state machines using BlazeFSM.
+/// Stream manager and per-stream state machines.
 /// Manages multiple concurrent streams, each with its own lifecycle state machine.
 import Foundation
-import BlazeFSM
 
 /// Stream-level state machine states.
 enum StreamState: Equatable {

@@ -7,7 +7,6 @@ final class BackpressureTests: XCTestCase {
     
     func testBackpressureLargeBurst() async throws {
         var congestion = CongestionController(initialWindow: 1460, initialSsthresh: 65535)
-        let initialWindow = congestion.congestionWindowBytes
         
         // Simulate large burst of data
         let burstSize = 1000000 // 1MB burst

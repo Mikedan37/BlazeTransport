@@ -1,7 +1,6 @@
-/// Connection-level state machine using BlazeFSM.
+/// Connection-level state machine.
 /// Manages connection lifecycle: idle → synSent → handshake → active → draining → closed.
 import Foundation
-import BlazeFSM
 
 /// Connection-level state machine states.
 enum ConnectionState: Equatable {

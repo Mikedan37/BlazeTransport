@@ -1,32 +1,41 @@
-/// Internal helpers for encoding/decoding Codable types using BlazeBinary.
-/// Provides a clean interface for BlazeStream to use BlazeBinary for framing.
+/// Internal helpers for encoding/decoding Codable types using length-prefixed binary framing.
+/// Provides a clean interface for BlazeStream to use for framing.
 import Foundation
-import BlazeBinary
 
-/// Helper functions for BlazeBinary encoding/decoding.
+/// Helper functions for binary encoding/decoding with length-prefixed framing.
 public enum BlazeBinaryHelpers {
-    /// Encode a Codable value into Data using BlazeBinary.
+    /// Encode a Codable value into length-prefixed binary data.
+    ///
+    /// Wire format: [4-byte big-endian length][JSON payload]
     ///
     /// - Parameter value: The Codable value to encode
     /// - Returns: Encoded binary data
-    /// - Throws: Encoding errors from BlazeBinary
+    /// - Throws: Encoding errors
     public static func encode<T: Codable>(_ value: T) throws -> Data {
-        let encoder = BlazeBinaryEncoder()
         let jsonData = try JSONEncoder().encode(value)
-        encoder.encode(jsonData)
-        return encoder.encodedData()
+        var framed = Data(capacity: 4 + jsonData.count)
+        var length = UInt32(jsonData.count).bigEndian
+        framed.append(Data(bytes: &length, count: 4))
+        framed.append(jsonData)
+        return framed
     }
 
-    /// Decode Data into a Codable type using BlazeBinary.
+    /// Decode length-prefixed binary data into a Codable type.
     ///
     /// - Parameters:
     ///   - type: The Codable type to decode
     ///   - data: The binary data to decode
     /// - Returns: Decoded value of the requested type
-    /// - Throws: Decoding errors from BlazeBinary
+    /// - Throws: Decoding errors
     public static func decode<T: Codable>(_ type: T.Type, from data: Data) throws -> T {
-        let decoder = BlazeBinaryDecoder(data: data)
-        let jsonData = try decoder.decodeData()
+        guard data.count >= 4 else {
+            throw BlazeTransportError.decodingFailed
+        }
+        let length = data.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        guard data.count >= 4 + Int(length) else {
+            throw BlazeTransportError.decodingFailed
+        }
+        let jsonData = data.subdata(in: 4..<(4 + Int(length)))
         return try JSONDecoder().decode(type, from: jsonData)
     }
     

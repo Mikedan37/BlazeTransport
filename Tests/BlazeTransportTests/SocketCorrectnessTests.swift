@@ -4,7 +4,12 @@ import XCTest
 /// Correctness tests for socket layer implementation.
 /// Validates protocol conformance, error handling, and edge cases.
 final class SocketCorrectnessTests: XCTestCase {
-    
+
+    override func setUp() {
+        super.setUp()
+        MockSocketRegistry.reset()
+    }
+
     // MARK: - Protocol Conformance Tests
     
     func testDatagramSocketProtocolRequirements() {

@@ -5,6 +5,12 @@ import XCTest
 /// Validates both MockDatagramSocket and platform-specific implementations.
 final class DatagramSocketTests: XCTestCase {
     
+    override func setUp() {
+        super.setUp()
+        // Clean up mock socket registry before each test
+        MockSocketRegistry.reset()
+    }
+    
     // MARK: - Mock Socket Tests
     
     func testMockSocketBind() throws {

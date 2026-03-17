@@ -1,7 +1,5 @@
-/// Compatibility layer for StateMachine API expected by BlazeTransport.
-/// Wraps the current BlazeFSM API to provide the State/Event/Effect pattern.
+/// Simple state machine with State/Event/Effect pattern.
 import Foundation
-import BlazeFSM
 
 /// Simple state machine implementation matching the expected API.
 struct StateMachine<State: Equatable, Event: Equatable, Effect> {
