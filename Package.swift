@@ -16,7 +16,8 @@ let package = Package(
         ),
         .executableTarget(
             name: "BlazeTransportBenchmarks",
-            dependencies: ["BlazeTransport"]
+            dependencies: ["BlazeTransport"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .executableTarget(
             name: "BlazeTransportFuzzing",

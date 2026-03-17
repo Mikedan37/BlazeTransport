@@ -3,8 +3,7 @@ import BlazeTransport
 
 /// Main entry point for BlazeTransport benchmarks with CLI interface.
 @main
-struct BenchmarkMain: @unchecked Sendable {
-    @MainActor
+struct BenchmarkMain {
     static func main() async {
         let args = CommandLine.arguments
         let config = parseArguments(args)
