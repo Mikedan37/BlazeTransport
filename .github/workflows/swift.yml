@@ -12,25 +12,25 @@ jobs:
       matrix:
         platform:
           - name: macOS ARM
-            runs-on: macos-14
-            xcode: Xcode_16.0.app
+            runs-on: macos-15
+            xcode: Xcode_16.2.app
             arch: arm64
           - name: macOS Intel (Rosetta)
-            runs-on: macos-14
-            xcode: Xcode_16.0.app
+            runs-on: macos-15
+            xcode: Xcode_16.2.app
             arch: x86_64
           - name: iOS Simulator
-            runs-on: macos-14
-            xcode: Xcode_16.0.app
+            runs-on: macos-15
+            xcode: Xcode_16.2.app
             sdk: iphonesimulator
-            destination: "platform=iOS Simulator,name=iPhone 15,OS=17.0"
+            destination: "platform=iOS Simulator,name=iPhone 16,OS=18.2"
           - name: Swift Nightly
-            runs-on: macos-14
-            xcode: Xcode_16.0.app
+            runs-on: macos-15
+            xcode: Xcode_16.2.app
             toolchain: nightly
     
     name: ${{ matrix.platform.name }}
-    runs-on: ${{ matrix.platform.runs-on || 'macos-14' }}
+    runs-on: ${{ matrix.platform.runs-on || 'macos-15' }}
     
     steps:
     - uses: actions/checkout@v4
