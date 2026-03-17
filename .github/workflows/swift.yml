@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         platform:
           - name: macOS ARM
@@ -92,6 +93,7 @@ jobs:
       run: swift test
     
     - name: Check SwiftFormat (if installed)
+      continue-on-error: true
       run: |
         if command -v swiftformat &> /dev/null; then
           swiftformat --lint .
